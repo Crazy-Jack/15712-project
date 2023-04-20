@@ -1,5 +1,7 @@
 #include "service.h"
 
+#include <iostream>
+
 void Service::BroadcastAll() {
   // Generate and send all the messages per round
   std::vector<Message> messages_to_send; 

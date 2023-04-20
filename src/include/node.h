@@ -17,6 +17,7 @@ struct Message {
     uint64_t sender_;
     std::string msg_;
 
+    Message(){}
     Message(uint64_t sender, std::string&& msg) : sender_(sender), msg_(std::move(msg)) {}
     // other fields
 
@@ -27,10 +28,12 @@ struct Message {
 
 class Node {
     public: 
-        Node(bool faulty, uint64_t id): id_(id), faulty_(faulty) {}
+        Node(bool faulty, uint64_t id, uint64_t num_nodes): id_(id), faulty_(faulty) {
+          messages_.resize(num_nodes);
+        }
         int GetId() const;
         std::string ToStr() const;
-        void ReceiveMessage(Message&& message);
+        void ReceiveMessage(const Message& message);
 
         // virtual methods for sending and receiving messages
 

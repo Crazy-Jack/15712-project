@@ -16,7 +16,7 @@
 
 class BasicGoodNode : public Node {
   public:
-    BasicGoodNode(bool faulty, uint64_t id) : Node(faulty, id) {}
+    BasicGoodNode(bool faulty, uint64_t id, uint64_t num_nodes) : Node(faulty, id, num_nodes) {}
 
     // Generates message to send to peer peer.
     Message GenerateMessagePeer(uint64_t peer, uint64_t round_num) override;

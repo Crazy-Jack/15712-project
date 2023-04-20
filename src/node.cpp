@@ -11,6 +11,6 @@ std::string Node::ToStr() const {
     return "Node " + std::to_string(id_) + ", faulty=" + faulty;
 }
 
-void Node::ReceiveMessage(Message&& message) {
-    messages_[message.sender_] = std::move(message);
+void Node::ReceiveMessage(const Message& message) {
+    messages_[message.sender_] = message;
 }

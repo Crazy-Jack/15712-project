@@ -58,8 +58,9 @@ int main(int argc, char** argv) {
 
   // Parse the tracefile. 
   std::string command;
-  std::string file_name = "./traces/" + tracefile;
-  std::ifstream file(file_name, std::ios::in);
+  std::ifstream file;
+  tracefile = "../traces/" + tracefile;
+  file.open(tracefile, std::ios::in);
   while (std::getline(file, command)) {
     service->ProcessCommand(command);
   }

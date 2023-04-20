@@ -9,11 +9,10 @@
 class BasicGoodService : public Service {
   public:
     BasicGoodService(uint64_t num_faulty_nodes, uint64_t byzantine_mode, bool reliable) {
-      std::vector<std::shared_ptr<Node>> nodes;
       int timestamp = 0;
       uint64_t total_nodes = 3 * num_faulty_nodes + 1;
       for (uint64_t i = 0; i < total_nodes; ++i) {
-        nodes.emplace_back(std::make_shared<BasicGoodNode>(false, timestamp));
+        nodes_.emplace_back(std::make_shared<BasicGoodNode>(false, timestamp, total_nodes));
         timestamp += 1;
       }
     }
