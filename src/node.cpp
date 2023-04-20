@@ -12,5 +12,5 @@ std::string Node::ToStr() const {
 }
 
 void Node::ReceiveMessage(Message&& message) {
-    messages_[message.sender] = std::move(message);
+    messages_[message.sender_] = std::move(message);
 }

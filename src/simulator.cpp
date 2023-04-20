@@ -1,11 +1,22 @@
 #include "node.h"
 #include "service.h"
+#include "basic_good_service.h"
 
+#include <fstream>
 #include <iostream>
-#include <unistd.h>
+#include <memory>
 #include <string.h>
 #include <string>
+#include <sstream>
+#include <unistd.h>
 #include <vector>
+
+/*
+Mode: 
+0: basic good service
+1: service using PBFT
+2: service using our algorithm
+*/
 
 int main(int argc, char** argv) {
   int c;
@@ -13,8 +24,10 @@ int main(int argc, char** argv) {
   std::string tracefile;
   uint64_t byzantine_mode = 0;
   bool reliable = true;
+  uint64_t mode = 0;
+  std::shared_ptr<Service> service;
 
-  while ((c = getopt(argc, argv, "f:t:b:r:")) != -1) {
+  while ((c = getopt(argc, argv, "f:t:b:r:m:")) != -1) {
     switch (c) {
       case 'f': {
         faulty_nodes = static_cast<uint64_t>(atoi(optarg));
@@ -30,28 +43,26 @@ int main(int argc, char** argv) {
           reliable = false;
         }
       } break;
+      case 'm': {
+        mode = static_cast<uint64_t>(atoi(optarg));
+      } break;
       default: {
         std::cout << "Got unknown argument " << c << std::endl;
       }
     }
   }
 
-  std::vector<Node> nodes;
-  int timestamp = 0;
-  for (uint64_t i = 0; i < faulty_nodes; ++i) {
-    nodes.emplace_back(true, timestamp);
-    timestamp += 1;
+  if (mode == 0) {
+    service = std::make_shared<BasicGoodService>(faulty_nodes, 0, true);
   }
 
-  uint64_t total_nodes = 3 * faulty_nodes + 1;
-  for (uint64_t i = faulty_nodes; i < total_nodes; ++i) {
-    nodes.emplace_back(false, timestamp);
-    timestamp += 1;
+  // Parse the tracefile. 
+  std::string command;
+  std::string file_name = "./traces/" + tracefile;
+  std::ifstream file(file_name, std::ios::in);
+  while (std::getline(file, command)) {
+    service->ProcessCommand(command);
   }
 
-  for (const auto& node : nodes) {
-    std::cout << node.ToStr() << std::endl;
-  }
-  
   return 0;
 }
