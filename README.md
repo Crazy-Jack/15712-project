@@ -7,3 +7,9 @@ Arguments to simulator:
 -b number representing what kind of faulty behaviors of Byzantine nodes
 -r reliability (true or false, do good nodes die accidentally)
 ```
+
+## Design
+
+main program:
+create nodes, parse arguments
+run commands in tracefile

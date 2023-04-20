@@ -1,4 +1,5 @@
 #include "node.h"
+#include "service.h"
 
 #include <iostream>
 #include <unistd.h>
