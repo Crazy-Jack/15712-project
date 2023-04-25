@@ -10,7 +10,3 @@ std::string Node::ToStr() const {
     std::string faulty = faulty_ ? "true" : "false";
     return "Node " + std::to_string(id_) + ", faulty=" + faulty;
 }
-
-void Node::ReceiveMessage(const Message& message) {
-    messages_[message.sender_] = message;
-}

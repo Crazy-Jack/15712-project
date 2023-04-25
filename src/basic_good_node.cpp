@@ -2,13 +2,17 @@
 
 #include "basic_good_node.h"
 
+void BasicGoodNode::ReceiveMessage(BasicGoodMessage message) {
+  messages_[message.sender_] = message;
+}
+
 // Generates message to send to peer peer.
-Message BasicGoodNode::GenerateMessagePeer(uint64_t peer, uint64_t round_num) {
+BasicGoodMessage BasicGoodNode::GenerateMessagePeer(uint64_t peer, uint64_t round_num) {
   return {id_, "Good node"};
 }
 
 // Generates message to send to all nodes.
-Message BasicGoodNode::GenerateMessageAll(uint64_t round_num) {
+BasicGoodMessage BasicGoodNode::GenerateMessageAll(uint64_t round_num) {
   return {id_, "Good node"};
 }
 void BasicGoodNode::ProcessMessages(uint64_t round_num) {
