@@ -11,6 +11,13 @@
 
 #include "node.h"
 
+#include <condition_variable>
+#include <iostream>
+#include <list>
+#include <sstream>
+#include <string>
+#include <thread>
+
 #ifndef __PBFT_NODES_H__
 #define __PBFT_NODES_H__
 
@@ -22,6 +29,8 @@ enum ClientReqType : char {
 struct ClientReq {
   ClientReqType type_;
   int num_; // if set, then set this here.
+
+  ClientReq(ClientReqType type, int num) : type_(type), num_(num) {}
 };
 
 enum PBFTMessageType : char {
@@ -33,8 +42,11 @@ enum PBFTMessageType : char {
 
 struct PBFTMessage {
   PBFTMessageType type_;
+  uint64_t sender_; // sender of the node
   uint64_t view_number_; // leader
   uint64_t sequence_number_; // request number
+  std::string data_;
+  int data_hash_;
   // other fields?
 };
 
@@ -42,21 +54,32 @@ struct PBFTMessage {
 class PBFTNode : public Node {
   public:
     PBFTNode(bool faulty, uint64_t id, uint64_t num_nodes) : Node(faulty, id, num_nodes) {}
+
+    void SendMessage(PBFTMessage message);
     
     /** REQUEST STAGE */
-    virtual void ReceiveRequestMsg(PBFTMessage& msg);
+    virtual PBFTMessage ReceiveRequestMsg(); // leader only
 
     /** PRE-PREPARE STAGE */
-    virtual PBFTMessage GeneratePrePrepareMsg();
-    virtual void ReceivePrePrepareMsg(PBFTMessage& msg);
+    virtual PBFTMessage GeneratePrePrepareMsg(); // leader only
+    virtual std::vector<PBFTMessage> ReceivePrePrepareMsg();
 
     /** PREPARE STAGE */
     virtual PBFTMessage GeneratePrepareMsg();
-    virtual void ReceivePrepareMsg(PBFTMessage& msg);
+    virtual std::vector<PBFTMessage> ReceivePrepareMsg();
 
     /** COMMIT STAGE */
     virtual PBFTMessage GenerateCommitMsg();
-    virtual void ReceiveCommitMsg(PBFTMessage& msg);
+    virtual std::vector<PBFTMessage> ReceiveCommitMsg();
+
+    /** REPLY */
+    virtual std::string ReplyRequest();
+  
+  protected:
+    std::list<PBFTMessage> queue_;
+    std::mutex queue_lock_;
+    std::condition_variable queue_cond_var_;
+    uint64_t view_number_; // who it thinks the leader is
 };
 
 class PBFTGoodNode : public PBFTNode {
@@ -64,19 +87,7 @@ class PBFTGoodNode : public PBFTNode {
     PBFTGoodNode(bool faulty, uint64_t id, uint64_t num_nodes) : PBFTNode(faulty, id, num_nodes) {}
 
     /** REQUEST STAGE */
-    void ReceiveRequestMsg(PBFTMessage& msg) override;
-
-    /** PRE-PREPARE STAGE */
-    PBFTMessage GeneratePrePrepareMsg() override;
-    void ReceivePrePrepareMsg(PBFTMessage& msg) override;
-
-    /** PREPARE STAGE */
-    PBFTMessage GeneratePrepareMsg() override;
-    void ReceivePrepareMsg(PBFTMessage& msg) override;
-
-    /** COMMIT STAGE */
-    PBFTMessage GenerateCommitMsg() override;
-    void ReceiveCommitMsg(PBFTMessage& msg) override;
+    PBFTMessage ReceiveRequestMsg() override;
 };
 
 class PBFTByzantineNode : public PBFTNode {
@@ -84,19 +95,7 @@ class PBFTByzantineNode : public PBFTNode {
     PBFTByzantineNode(bool faulty, uint64_t id, uint64_t num_nodes) : PBFTNode(faulty, id, num_nodes) {}
 
     /** REQUEST STAGE */
-    void ReceiveRequestMsg(PBFTMessage& msg) override;
-
-    /** PRE-PREPARE STAGE */
-    PBFTMessage GeneratePrePrepareMsg() override;
-    void ReceivePrePrepareMsg(PBFTMessage& msg) override;
-
-    /** PREPARE STAGE */
-    PBFTMessage GeneratePrepareMsg() override;
-    void ReceivePrepareMsg(PBFTMessage& msg) override;
-
-    /** COMMIT STAGE */
-    PBFTMessage GenerateCommitMsg() override;
-    void ReceiveCommitMsg(PBFTMessage& msg) override;
+    PBFTMessage ReceiveRequestMsg() override;
 };
 
 #endif // __PBFT_NODES_H__

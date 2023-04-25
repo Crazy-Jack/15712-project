@@ -9,65 +9,40 @@
 
 #include "pbft_nodes.h"
 
-/** PBFT Good Nodes */
-/** REQUEST STAGE */
-void PBFTGoodNode::ReceiveRequestMsg(PBFTMessage& msg){
-  
+#include <mutex>
+#include <condition_variable>
+
+ClientReq process_client_req(const std::string& command) {
+  ClientReqType type;
+  int num = 0;
+  if (command.compare("g") == 0) {
+    type = ClientReqType::PBFT_GET;
+  } else {
+    std::stringstream ss(command);  
+    std::istream_iterator<std::string> begin(ss);
+    std::istream_iterator<std::string> end;
+    std::vector<std::string> commands(begin, end);
+    type = ClientReqType::PBFT_SET;
+    num = std::stoi(commands[1]);
+  }
+  return ClientReq(type, num);
 }
 
-/** PRE-PREPARE STAGE */
-PBFTMessage PBFTGoodNode::GeneratePrePrepareMsg() {
-
+void PBFTNode::SendMessage(PBFTMessage message) {
+  queue_lock_.lock();
+  queue_.push_back(message);
+  queue_lock_.unlock();
 }
 
-void PBFTGoodNode::ReceivePrePrepareMsg(PBFTMessage& msg) {
-
+/** GOOD NODES */
+PBFTMessage PBFTGoodNode::ReceiveRequestMsg() {
+  std::unique_lock<std::mutex> lck(queue_lock_);
+  while () {
+    queue_cond_var_.wait(queue_lock_);
+  }
 }
 
-/** PREPARE STAGE */
-PBFTMessage PBFTGoodNode::GeneratePrepareMsg() {
-
-}
-void PBFTGoodNode::ReceivePrepareMsg(PBFTMessage& msg) {
-
-}
-
-/** COMMIT STAGE */
-PBFTMessage PBFTGoodNode::GenerateCommitMsg() {
-
-}
-void PBFTGoodNode::ReceiveCommitMsg(PBFTMessage& msg) {
-
-}
-
-
-/** PBFT Byzantine Nodes */
-/** REQUEST STAGE */
-void PBFTByzantineNode::ReceiveRequestMsg(PBFTMessage& msg){
-
-}
-
-/** PRE-PREPARE STAGE */
-PBFTMessage PBFTByzantineNode::GeneratePrePrepareMsg() {
-
-}
-
-void PBFTByzantineNode::ReceivePrePrepareMsg(PBFTMessage& msg) {
-
-}
-
-/** PREPARE STAGE */
-PBFTMessage PBFTByzantineNode::GeneratePrepareMsg() {
-
-}
-void PBFTByzantineNode::ReceivePrepareMsg(PBFTMessage& msg) {
-
-}
-
-/** COMMIT STAGE */
-PBFTMessage PBFTByzantineNode::GenerateCommitMsg() {
-
-}
-void PBFTByzantineNode::ReceiveCommitMsg(PBFTMessage& msg) {
+/** BAD NODES */
+PBFTMessage PBFTByzantineNode::ReceiveRequestMsg() {
 
 }

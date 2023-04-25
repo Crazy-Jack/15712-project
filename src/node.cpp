@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 
-int Node::GetId() const {
+uint64_t Node::GetId() const {
     return id_;
 }
 

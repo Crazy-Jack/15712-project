@@ -5,6 +5,7 @@
 #include "pbft_nodes.h"
 
 #include <memory>
+#include <random>
 #include <variant>
 
 class PBFTService : public Service {
@@ -21,6 +22,11 @@ class PBFTService : public Service {
         nodes_.emplace_back(std::make_shared<PBFTGoodNode>(reliable, timestamp, total_nodes));
         timestamp += 1;
       }
+
+      // Pick leader node
+      std::default_random_engine generator;
+      std::uniform_int_distribution<uint64_t> distribution(0,total_nodes - 1);
+      primary_node_ = distribution(generator);
     }
 
     void ProcessCommand(const std::string& command) override;
