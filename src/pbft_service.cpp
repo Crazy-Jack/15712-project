@@ -1,17 +1,20 @@
 /**
- * @file basic_good_service.cpp
+ * @file pbft_service.cpp
  * @author your name (you@domain.com)
- * @brief Processes command for basic service.
+ * @brief pbft service
  */
 
 #include "pbft_service.h"
 
 #include <condition_variable>
-#include <optional>
+#include <future>
 #include <iostream>
+#include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 bool ReplicaValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
@@ -28,31 +31,36 @@ bool ReplicaValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
   if (pre_prepare_msg.type_ != PBFTMessageType::PREPREPARE
    || pre_prepare_msg.data_hash_ != std::hash<std::string>{}(pre_prepare_msg.data_)
    || pre_prepare_msg.sender_ != pre_prepare_msg.view_number_
-   || ) {
+   || pre_prepare_msg.view_number_ != nodes[i]->GetViewNumber()) {
     return false;
   }
 
   // Send out prepare message
-  PBFTMessage pre_prepare_msg = nodes[i]->GeneratePrepareMsg();
+  PBFTMessage prepare_msg = nodes[i]->GeneratePrepareMsg();
   for (uint64_t j = 0; j < nodes.size(); ++j) {
     if (j == nodes[i]->GetId()) {
       continue;
     } else {
-      nodes[j]->SendMessage(pre_prepare_msg);
+      nodes[j]->SendMessage(prepare_msg);
     }
   }
 
   std::vector<PBFTMessage> prepare_messages = nodes[i]->ReceivePrepareMsg();
   for (const auto& msg : prepare_messages) {
+    // view number, sequence number, hash
     // checks signatures (hash, here), replica number = current view, 2f prepare
     // messages match w the pre-prepare message
-
-    if (false) {
+    if (msg.data_hash_ != prepare_msg.data_hash_
+     || msg.view_number_ != prepare_msg.view_number_
+     || msg.sequence_number_ != prepare_msg.sequence_number_) {
+      return false;
     }
   }
+
+  return true;
 }
 
-std::optional<std::string> ProcessCommandReplica(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
+void ProcessCommandReplica(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes, std::promise<std::string>&& val) {
   while (!ReplicaValidation(i, nodes)) {
     /// TODO: view change
   }
@@ -70,41 +78,59 @@ std::optional<std::string> ProcessCommandReplica(int i, std::vector<std::shared_
   std::vector<PBFTMessage> commit_msgs = nodes[i]->ReceiveCommitMsg();
   uint64_t f = (nodes.size() - 1)/3;
   if (commit_msgs.size() >= 2 * f) {
-    return std::make_optional<std::string>(nodes[i]->ReplyRequest());
+    val.set_value(nodes[i]->ReplyRequest());
+    return;
   }
 
-  return std::nullopt;
+  val.set_value("");
 }
 
+void ProcessCommandLeader(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes, const std::string& command, std::promise<std::string>&& val) {
+  // Has client request (from simulation)
+  nodes[i]->ReceiveRequestMsg(command);
+
+  PBFTMessage pre_prepare_msg = nodes[i]->GeneratePrePrepareMsg();
+  for (uint64_t j = 0; j < nodes.size(); ++j) {
+    nodes[j]->SendMessage(pre_prepare_msg);
+  }
+
+  ProcessCommandReplica(i, nodes, std::move(val));
+}
+
+// SET VAL or VAL should be return value
 void PBFTService::ProcessCommand(const std::string& command) {
-  // Process client request
-  
+  // Empty string = no value
+  std::vector<std::promise<std::string>> return_promises(nodes_.size());
+  std::vector<std::future<std::string>> return_futures;
+  std::vector<std::thread> threads;
 
+  for (uint64_t i = 0; i < nodes.size(); ++i) {
+    return_futures.emplace_back(return_promises[i].get_future());
+    if (i == primary_node_) {
+      threads.emplace_back(ProcessCommandLeader, i, nodes_, command, std::move(return_promises[i]));
+    } else {
+      threads.emplace_back(ProcessCommandReplica, i, nodes_, std::move(return_promises[i]));
+    }
+  }
 
+  // Join all threads
+  for (auto& thread : threads) {
+    thread.join();
+  }
 
-  //create n -1 threads that execute this
-	{
-    // index into nodes
-		// receives pre-prepare message
-		// sends out a prepare message
-		// processes prepare messages from other nodes
-		// checks signatures (hash, here), replica number = current view, 2f prepare
-		// messages match w the pre-prepare message
-		// if this is true, then send out commit message
-		// if accumulate 2f commit messages then send reply to client
-	}
-  
-	// leader thread 
-  {
-		// receives client request
-		// multicasts pre-prepare message to the nodes
-		// sends out a prepare message
-		// processes prepare messages from other nodes
-		// checks signatures (hash, here), replica number = current view, 2f prepare
-		// messages match w the pre-prepare message
-		// if this is true, then send out commit message
-		// if accumulate 2f commit messages then send reply to client
-	}
+  std::unordered_map<std::string, uint64_t> count_vals;
+  for (auto& future: return_futures) {
+    std::string val = future.get();
+    if (count_vals.find(val) == count_vals.end()) {
+      count_vals.insert(std::make_pair(val, 1));
+    } else {
+      count_vals[val] += 1;
+    }
+  }
 
-
+  for (const auto& elem : count_vals) {
+    if (elem.second > 2 * f_ ) {
+      std::cout << elem.first << std::endl;
+    }
+  }
 }

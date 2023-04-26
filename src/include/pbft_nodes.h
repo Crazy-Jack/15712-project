@@ -53,12 +53,15 @@ struct PBFTMessage {
 // Virtual class
 class PBFTNode : public Node {
   public:
-    PBFTNode(bool faulty, uint64_t id, uint64_t num_nodes) : Node(faulty, id, num_nodes) {}
+    PBFTNode(bool faulty, uint64_t id, uint64_t num_nodes, uint64_t leader) 
+    : Node(faulty, id, num_nodes)
+    , view_number_(leader) {}
 
     void SendMessage(PBFTMessage message);
+    inline uint64_t GetViewNumber() { return view_number_; }
     
     /** REQUEST STAGE */
-    virtual PBFTMessage ReceiveRequestMsg(); // leader only
+    virtual void ReceiveRequestMsg(const std::string& command); // leader only
 
     /** PRE-PREPARE STAGE */
     virtual PBFTMessage GeneratePrePrepareMsg(); // leader only
@@ -80,11 +83,13 @@ class PBFTNode : public Node {
     std::mutex queue_lock_;
     std::condition_variable queue_cond_var_;
     uint64_t view_number_; // who it thinks the leader is
+    std::vector<PBFTMessage> log_; // logs all the messages locally
+    int val_; // the one value the nodes are updating
 };
 
 class PBFTGoodNode : public PBFTNode {
   public:
-    PBFTGoodNode(bool faulty, uint64_t id, uint64_t num_nodes) : PBFTNode(faulty, id, num_nodes) {}
+    PBFTGoodNode(bool faulty, uint64_t id, uint64_t num_nodes, uint64_t leader) : PBFTNode(faulty, id, num_nodes, leader) {}
 
     /** REQUEST STAGE */
     PBFTMessage ReceiveRequestMsg() override;
@@ -92,7 +97,7 @@ class PBFTGoodNode : public PBFTNode {
 
 class PBFTByzantineNode : public PBFTNode {
   public:
-    PBFTByzantineNode(bool faulty, uint64_t id, uint64_t num_nodes) : PBFTNode(faulty, id, num_nodes) {}
+    PBFTByzantineNode(bool faulty, uint64_t id, uint64_t num_nodes, uint64_t leader) : PBFTNode(faulty, id, num_nodes, leader) {}
 
     /** REQUEST STAGE */
     PBFTMessage ReceiveRequestMsg() override;
