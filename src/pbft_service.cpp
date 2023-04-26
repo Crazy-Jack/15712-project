@@ -14,6 +14,7 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -35,6 +36,8 @@ bool ReplicaValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
     return false;
   }
 
+  nodes[i]->SetPrePrepareMsgState(pre_prepare_msg);
+
   // Send out prepare message
   PBFTMessage prepare_msg = nodes[i]->GeneratePrepareMsg();
   for (uint64_t j = 0; j < nodes.size(); ++j) {
@@ -45,24 +48,25 @@ bool ReplicaValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
     }
   }
 
+  // Have 3f messages here (or more if extra pre-prepare messages exist)
   std::vector<PBFTMessage> prepare_messages = nodes[i]->ReceivePrepareMsg();
+  uint64_t valid_prepare_msg_count = 0;
   for (const auto& msg : prepare_messages) {
     // view number, sequence number, hash
     // checks signatures (hash, here), replica number = current view, 2f prepare
     // messages match w the pre-prepare message
-    if (msg.data_hash_ != prepare_msg.data_hash_
+    if ( msg.type_ != PBFTMessageType::PREPARE
+     || msg.data_hash_ != prepare_msg.data_hash_
      || msg.view_number_ != prepare_msg.view_number_
      || msg.sequence_number_ != prepare_msg.sequence_number_) {
+      valid_prepare_msg_count += 1;
+    } else if (msg.type_ == PBFTMessageType::PREPREPARE) {
       return false;
     }
   }
 
-  return true;
-}
-
-void ProcessCommandReplica(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes, std::promise<std::string>&& val) {
-  while (!ReplicaValidation(i, nodes)) {
-    /// TODO: view change
+  if (valid_prepare_msg_count < nodes[i]->GetF() * 2) {
+    return false;
   }
 
   // Send out commit messages
@@ -76,46 +80,55 @@ void ProcessCommandReplica(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes,
   }
 
   std::vector<PBFTMessage> commit_msgs = nodes[i]->ReceiveCommitMsg();
-  uint64_t f = (nodes.size() - 1)/3;
-  if (commit_msgs.size() >= 2 * f) {
-    val.set_value(nodes[i]->ReplyRequest());
-    return;
+  for (const auto &msg : commit_msgs) {
+    if (msg.type_ == PBFTMessageType::PREPREPARE) {
+      return false;
+    }
   }
 
-  val.set_value("");
+  return commit_msgs.size() >= 2 * nodes[i]->GetF();
 }
 
-void ProcessCommandLeader(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes, const std::string& command, std::promise<std::string>&& val) {
+void ProcessCommandReplica(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes, std::promise<std::string>&& val) {
+  while (!ReplicaValidation(i, nodes)) {
+    /// TODO: view change
+  }
+
+  val.set_value(nodes[i]->ReplyRequest());
+}
+
+void ProcessCommandLeader(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command, std::promise<std::string>&& val) {
   // Has client request (from simulation)
   nodes[i]->ReceiveRequestMsg(command);
 
   PBFTMessage pre_prepare_msg = nodes[i]->GeneratePrePrepareMsg();
   for (uint64_t j = 0; j < nodes.size(); ++j) {
-    nodes[j]->SendMessage(pre_prepare_msg);
+    if (i == j) continue;
+    else {
+      nodes[j]->SendMessage(pre_prepare_msg);
+    }
   }
 
   ProcessCommandReplica(i, nodes, std::move(val));
 }
 
-// SET VAL or VAL should be return value
 void PBFTService::ProcessCommand(const std::string& command) {
   // Empty string = no value
   std::vector<std::promise<std::string>> return_promises(nodes_.size());
   std::vector<std::future<std::string>> return_futures;
   std::vector<std::thread> threads;
 
-  for (uint64_t i = 0; i < nodes.size(); ++i) {
+  for (uint64_t i = 0; i < nodes_.size(); ++i) {
     return_futures.emplace_back(return_promises[i].get_future());
     if (i == primary_node_) {
-      threads.emplace_back(ProcessCommandLeader, i, nodes_, command, std::move(return_promises[i]));
+      threads.push_back(std::thread(ProcessCommandLeader, i, std::ref(nodes_), command, std::move(return_promises[i])));
     } else {
-      threads.emplace_back(ProcessCommandReplica, i, nodes_, std::move(return_promises[i]));
+      threads.push_back(std::thread(ProcessCommandReplica, i, std::ref(nodes_), std::move(return_promises[i])));
     }
   }
 
-  // Join all threads
-  for (auto& thread : threads) {
-    thread.join();
+  for (auto &t : threads) {
+    t.join();
   }
 
   std::unordered_map<std::string, uint64_t> count_vals;

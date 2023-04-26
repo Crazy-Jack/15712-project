@@ -1,6 +1,6 @@
 /**
  * @file basic_good_service.cpp
- * @author your name (you@domain.com)
+ * @author Abigale Kim (abigalek)
  * @brief Processes command for basic service.
  */
 

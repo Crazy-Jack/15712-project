@@ -1,3 +1,9 @@
+/**
+ * @file basic_good_node.cpp
+ * @author Abigale Kim (abigalek)
+ * @brief basic good node (for example)
+ */
+
 #include <iostream>
 
 #include "basic_good_node.h"

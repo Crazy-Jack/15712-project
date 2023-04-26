@@ -1,6 +1,6 @@
 /**
  * @file basic_good_node.h
- * @author your name (you@domain.com)
+ * @author Abigale Kim (abigalek)
  * @brief basic good node
  * @version 0.1
  * @date 2023-04-20

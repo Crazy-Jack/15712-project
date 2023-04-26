@@ -17,9 +17,13 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <vector>
 
 #ifndef __PBFT_NODES_H__
 #define __PBFT_NODES_H__
+
+// To wait for messages to accumulate, wait GLOBAL_STALL milliseconds.
+const uint64_t GLOBAL_STALL = 50;
 
 enum ClientReqType : char {
   PBFT_GET,
@@ -48,17 +52,32 @@ struct PBFTMessage {
   std::string data_;
   int data_hash_;
   // other fields?
+
+  PBFTMessage(PBFTMessageType type, 
+  uint64_t sender, 
+  uint64_t view_number, 
+  uint64_t sequence_number, 
+  std::string data)
+  : type_(type)
+  , sender_(sender)
+  , view_number_(view_number)
+  , sequence_number_(sequence_number)
+  , data_(data) {
+    data_hash_ = std::hash<std::string>{}(data);
+  }
 };
 
 // Virtual class
 class PBFTNode : public Node {
   public:
-    PBFTNode(bool faulty, uint64_t id, uint64_t num_nodes, uint64_t leader) 
+    PBFTNode(bool faulty, uint64_t id, uint64_t num_nodes, uint64_t leader, uint64_t f) 
     : Node(faulty, id, num_nodes)
-    , view_number_(leader) {}
+    , view_number_(leader)
+    , f_(f) {}
 
     void SendMessage(PBFTMessage message);
     inline uint64_t GetViewNumber() { return view_number_; }
+    inline uint64_t GetF() { return f_; }
     
     /** REQUEST STAGE */
     virtual void ReceiveRequestMsg(const std::string& command); // leader only
@@ -66,6 +85,7 @@ class PBFTNode : public Node {
     /** PRE-PREPARE STAGE */
     virtual PBFTMessage GeneratePrePrepareMsg(); // leader only
     virtual std::vector<PBFTMessage> ReceivePrePrepareMsg();
+    virtual void SetPrePrepareMsgState(const PBFTMessage& msg);
 
     /** PREPARE STAGE */
     virtual PBFTMessage GeneratePrepareMsg();
@@ -79,28 +99,51 @@ class PBFTNode : public Node {
     virtual std::string ReplyRequest();
   
   protected:
+    /** Checks for the existence of one pre-prepare message. */
+    bool AllPrePrepareMsgExist();
+
+    /** Checks for the existence of 2f prepare messages. */
+    bool AllPrepareMsgExist();
+
+    /** Checks for the existence of 2f commit messages. */
+    bool AllCommitMsgExist();
+
     std::list<PBFTMessage> queue_;
     std::mutex queue_lock_;
     std::condition_variable queue_cond_var_;
     uint64_t view_number_; // who it thinks the leader is
     std::vector<PBFTMessage> log_; // logs all the messages locally
     int val_; // the one value the nodes are updating
+    uint64_t f_; // number of nodes
+
+    // Keeps track of state sent by pre-prepare message locally
+    std::string local_message_;
+    uint64_t local_sequence_num_{0};
+    uint64_t local_view_number_{0};
 };
 
 class PBFTGoodNode : public PBFTNode {
   public:
-    PBFTGoodNode(bool faulty, uint64_t id, uint64_t num_nodes, uint64_t leader) : PBFTNode(faulty, id, num_nodes, leader) {}
+    PBFTGoodNode(bool faulty, uint64_t id, uint64_t num_nodes, uint64_t leader, uint64_t f) : PBFTNode(faulty, id, num_nodes, leader, f) {}
 
     /** REQUEST STAGE */
-    PBFTMessage ReceiveRequestMsg() override;
-};
+    void ReceiveRequestMsg(const std::string& command) override;
 
-class PBFTByzantineNode : public PBFTNode {
-  public:
-    PBFTByzantineNode(bool faulty, uint64_t id, uint64_t num_nodes, uint64_t leader) : PBFTNode(faulty, id, num_nodes, leader) {}
+    /** PRE-PREPARE STAGE */
+    PBFTMessage GeneratePrePrepareMsg() override; // leader only
+    std::vector<PBFTMessage> ReceivePrePrepareMsg() override;
+    void SetPrePrepareMsgState(const PBFTMessage& msg) override;
 
-    /** REQUEST STAGE */
-    PBFTMessage ReceiveRequestMsg() override;
+    /** PREPARE STAGE */
+    PBFTMessage GeneratePrepareMsg() override;
+    std::vector<PBFTMessage> ReceivePrepareMsg() override;
+
+    /** COMMIT STAGE */
+    PBFTMessage GenerateCommitMsg() override;
+    std::vector<PBFTMessage> ReceiveCommitMsg() override;
+
+    /** REPLY */
+    std::string ReplyRequest() override;
 };
 
 #endif // __PBFT_NODES_H__

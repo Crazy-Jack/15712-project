@@ -1,6 +1,7 @@
 #include "node.h"
 #include "service.h"
-#include "basic_good_service.h"
+#include "non_replicated_service.hpp"
+#include "pbft_service.h"
 
 #include <fstream>
 #include <iostream>
@@ -13,7 +14,7 @@
 
 /*
 Mode: 
-0: basic good service
+0: non replicated service
 1: service using PBFT
 2: service using our algorithm
 */
@@ -53,7 +54,9 @@ int main(int argc, char** argv) {
   }
 
   if (mode == 0) {
-    service = std::make_shared<BasicGoodService>(faulty_nodes, 0, true);
+    service = std::make_shared<NonReplicatedService>();
+  } else if (mode == 1) {
+    service = std::make_shared<PBFTService>(faulty_nodes, 0, true);
   }
 
   // Parse the tracefile. 

@@ -7,9 +7,8 @@ project(Byzantine-Simulator DESCRIPTION "15-712 course project")
 add_executable(bft-sim 
   src/simulator.cpp 
   src/service.cpp 
-  src/basic_good_service.cpp 
+  src/include/non_replicated_service.hpp
   src/node.cpp 
-  src/basic_good_node.cpp
   src/pbft_service.cpp
   src/pbft_nodes.cpp)
   
