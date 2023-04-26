@@ -2,7 +2,7 @@
 
 Arguments to simulator:
 ```
--f: number of faulty nodes
+-f number of faulty nodes; the total number of nodes is then taken as 3f+1
 -t tracefile with client commands
 -b number representing what kind of faulty behaviors of Byzantine nodes
 -r reliability (true or false, do good nodes die accidentally)
