@@ -80,23 +80,23 @@ class PBFTNode : public Node {
     inline uint64_t GetF() { return f_; }
     
     /** REQUEST STAGE */
-    virtual void ReceiveRequestMsg(const std::string& command); // leader only
+    virtual void ReceiveRequestMsg(const std::string& command) = 0; // leader only
 
     /** PRE-PREPARE STAGE */
-    virtual PBFTMessage GeneratePrePrepareMsg(); // leader only
-    virtual std::vector<PBFTMessage> ReceivePrePrepareMsg();
-    virtual void SetPrePrepareMsgState(const PBFTMessage& msg);
+    virtual PBFTMessage GeneratePrePrepareMsg() = 0; // leader only
+    virtual std::vector<PBFTMessage> ReceivePrePrepareMsg() = 0;
+    virtual void SetPrePrepareMsgState(const PBFTMessage& msg) = 0;
 
     /** PREPARE STAGE */
-    virtual PBFTMessage GeneratePrepareMsg();
-    virtual std::vector<PBFTMessage> ReceivePrepareMsg();
+    virtual PBFTMessage GeneratePrepareMsg() = 0;
+    virtual std::vector<PBFTMessage> ReceivePrepareMsg()= 0;
 
     /** COMMIT STAGE */
-    virtual PBFTMessage GenerateCommitMsg();
-    virtual std::vector<PBFTMessage> ReceiveCommitMsg();
+    virtual PBFTMessage GenerateCommitMsg() = 0;
+    virtual std::vector<PBFTMessage> ReceiveCommitMsg() = 0;
 
     /** REPLY */
-    virtual std::string ReplyRequest();
+    virtual std::string ReplyRequest() = 0;
   
   protected:
     /** Checks for the existence of one pre-prepare message. */
