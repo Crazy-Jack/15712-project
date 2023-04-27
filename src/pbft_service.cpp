@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-bool ReplicaValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
+bool PrePrepareValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
   // Get pre-prepare message
   std::vector<PBFTMessage> pre_prepare_msgs = nodes[i]->ReceivePrePrepareMsg();
 
@@ -31,13 +31,15 @@ bool ReplicaValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
   PBFTMessage &pre_prepare_msg = pre_prepare_msgs[0];
   if (pre_prepare_msg.type_ != PBFTMessageType::PREPREPARE
    || pre_prepare_msg.data_hash_ != std::hash<std::string>{}(pre_prepare_msg.data_)
-   || pre_prepare_msg.sender_ != pre_prepare_msg.view_number_
-   || pre_prepare_msg.view_number_ != nodes[i]->GetViewNumber()) {
+   || pre_prepare_msg.sender_ != pre_prepare_msg.view_number_) {
     return false;
   }
 
   nodes[i]->SetPrePrepareMsgState(pre_prepare_msg);
+  return true;
+}
 
+bool PrepareValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
   // Send out prepare message
   PBFTMessage prepare_msg = nodes[i]->GeneratePrepareMsg();
   for (uint64_t j = 0; j < nodes.size(); ++j) {
@@ -47,7 +49,7 @@ bool ReplicaValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
       nodes[j]->SendMessage(prepare_msg);
     }
   }
-
+  
   // Have 3f messages here (or more if extra pre-prepare messages exist)
   std::vector<PBFTMessage> prepare_messages = nodes[i]->ReceivePrepareMsg();
   uint64_t valid_prepare_msg_count = 0;
@@ -55,10 +57,10 @@ bool ReplicaValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
     // view number, sequence number, hash
     // checks signatures (hash, here), replica number = current view, 2f prepare
     // messages match w the pre-prepare message
-    if ( msg.type_ != PBFTMessageType::PREPARE
-     || msg.data_hash_ != prepare_msg.data_hash_
-     || msg.view_number_ != prepare_msg.view_number_
-     || msg.sequence_number_ != prepare_msg.sequence_number_) {
+    if (msg.type_ == PBFTMessageType::PREPARE
+     && msg.data_hash_ == prepare_msg.data_hash_
+     && msg.view_number_ == prepare_msg.view_number_
+     && msg.sequence_number_ == prepare_msg.sequence_number_) {
       valid_prepare_msg_count += 1;
     } else if (msg.type_ == PBFTMessageType::PREPREPARE) {
       return false;
@@ -69,6 +71,10 @@ bool ReplicaValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
     return false;
   }
 
+  return true;
+}
+
+bool CommitValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
   // Send out commit messages
   PBFTMessage commit_msg = nodes[i]->GenerateCommitMsg();
   for (uint64_t j = 0; j < nodes.size(); ++j) {
@@ -87,6 +93,26 @@ bool ReplicaValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
   }
 
   return commit_msgs.size() >= 2 * nodes[i]->GetF();
+}
+
+bool ReplicaValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
+  if (!PrePrepareValidation(i, nodes)) {
+    return false;
+  }
+
+  if (!PrepareValidation(i, nodes)) {
+    return false;
+  }
+
+  return CommitValidation(i, nodes);
+}
+
+bool LeaderValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) {
+  if (!PrepareValidation(i, nodes)) {
+    return false;
+  }
+
+  return CommitValidation(i, nodes);
 }
 
 void ProcessCommandReplica(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes, std::promise<std::string>&& val) {
@@ -109,7 +135,11 @@ void ProcessCommandLeader(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes, 
     }
   }
 
-  ProcessCommandReplica(i, nodes, std::move(val));
+  while(!LeaderValidation(i, nodes)) {
+    /// TODO: view change
+  }
+
+  val.set_value(nodes[i]->ReplyRequest());
 }
 
 void PBFTService::ProcessCommand(const std::string& command) {

@@ -14,6 +14,25 @@
 #include <mutex>
 #include <vector>
 
+std::string PBFTMessageTypeToStr(PBFTMessageType type) {
+  switch(type) {
+    case PBFTMessageType::REQUEST: {
+      return "REQUEST";
+    }
+    case PBFTMessageType::PREPREPARE: {
+      return "PREPREPARE";
+    }
+    case PBFTMessageType::PREPARE: {
+      return "PREPARE";
+    }
+    case PBFTMessageType::COMMIT: {
+      return "COMMIT";
+    }
+  }
+
+  return "";
+}
+
 ClientReq process_client_req(const std::string& command) {
   ClientReqType type;
   int num = 0;

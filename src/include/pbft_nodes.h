@@ -44,13 +44,15 @@ enum PBFTMessageType : char {
   COMMIT
 };
 
+std::string PBFTMessageTypeToStr(PBFTMessageType type);
+
 struct PBFTMessage {
   PBFTMessageType type_;
   uint64_t sender_; // sender of the node
   uint64_t view_number_; // leader
   uint64_t sequence_number_; // request number
   std::string data_;
-  int data_hash_;
+  size_t data_hash_;
   // other fields?
 
   PBFTMessage(PBFTMessageType type, 
@@ -64,6 +66,12 @@ struct PBFTMessage {
   , sequence_number_(sequence_number)
   , data_(data) {
     data_hash_ = std::hash<std::string>{}(data);
+  }
+
+  std::string ToStr() const {
+    return "Type: " + PBFTMessageTypeToStr(type_) + ", Sender: " 
+    + std::to_string(sender_) + ", View Num: " + std::to_string(view_number_)
+    + ", Sequence Number: " + std::to_string(sequence_number_) + ", Data: " + data_;
   }
 };
 
