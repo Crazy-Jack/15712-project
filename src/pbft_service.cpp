@@ -30,7 +30,7 @@ bool PrePrepareValidation(int i, std::vector<std::shared_ptr<PBFTNode>>& nodes) 
   // TODO: faulty node threshold
   PBFTMessage &pre_prepare_msg = pre_prepare_msgs[0];
   if (pre_prepare_msg.type_ != PBFTMessageType::PREPREPARE
-   || pre_prepare_msg.data_hash_ != std::hash<std::string>{}(pre_prepare_msg.data_)
+   || pre_prepare_msg.data_hash_ != sha256(pre_prepare_msg.data_)
    || pre_prepare_msg.sender_ != pre_prepare_msg.view_number_) {
     return false;
   }

@@ -10,6 +10,11 @@ add_executable(bft-sim
   src/include/non_replicated_service.hpp
   src/node.cpp 
   src/pbft_service.cpp
-  src/pbft_nodes.cpp)
+  src/pbft_nodes.cpp
+  src/lib.cpp)
   
 target_include_directories(bft-sim PUBLIC ${CMAKE_SOURCE_DIR}/src/include)
+
+# Importing OpenSSL
+find_package(OpenSSL REQUIRED)
+target_link_libraries(bft-sim OpenSSL::Crypto)

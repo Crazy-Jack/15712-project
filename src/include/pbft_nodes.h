@@ -1,14 +1,10 @@
 /**
- * @file byzantine_nodes.h
- * @author your name (you@domain.com)
- * @brief 
- * @version 0.1
- * @date 2023-04-20
- * 
- * @copyright Copyright (c) 2023
- * 
+ * @file pbft_nodes.h
+ * @author Abigale Kim
+ * @brief Node classes used in the PBFT protocol.
  */
 
+#include "lib.h"
 #include "node.h"
 
 #include <condition_variable>
@@ -21,9 +17,6 @@
 
 #ifndef __PBFT_NODES_H__
 #define __PBFT_NODES_H__
-
-// To wait for messages to accumulate, wait GLOBAL_STALL milliseconds.
-const uint64_t GLOBAL_STALL = 50;
 
 enum ClientReqType : char {
   PBFT_GET,
@@ -44,6 +37,7 @@ enum PBFTMessageType : char {
   COMMIT
 };
 
+/** Helper functions */
 std::string PBFTMessageTypeToStr(PBFTMessageType type);
 
 struct PBFTMessage {
@@ -52,20 +46,19 @@ struct PBFTMessage {
   uint64_t view_number_; // leader
   uint64_t sequence_number_; // request number
   std::string data_;
-  size_t data_hash_;
+  std::string data_hash_;
   // other fields?
 
   PBFTMessage(PBFTMessageType type, 
   uint64_t sender, 
   uint64_t view_number, 
   uint64_t sequence_number, 
-  std::string data)
-  : type_(type)
+  std::string data) : type_(type)
   , sender_(sender)
   , view_number_(view_number)
   , sequence_number_(sequence_number)
   , data_(data) {
-    data_hash_ = std::hash<std::string>{}(data);
+    data_hash_ = sha256(data);
   }
 
   std::string ToStr() const {

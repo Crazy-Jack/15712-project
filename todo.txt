@@ -1,15 +1,12 @@
 abi todo
-5. compile and test
-6. HMAC. along with serializing whole message not just the command field.
-7. write bad nodes
 8. use log_
-9. compile and test
-10. view change 
-11. write bad node that just returns inconsistent results
-12. test
-13. write longer tests
-14. write testing script thing
+7. write bad nodes
+9. view change 
+10. write bad node that just returns inconsistent results
+11. test
+12. write longer tests
+13. write testing script thing
 
 tianqin todo
-13. alberts algo
-14. compile and test
+14. alberts algo
+15. compile and test
