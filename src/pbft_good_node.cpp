@@ -11,6 +11,7 @@
 #include "pbft_good_node.h"
 
 #include <algorithm>
+#include <iostream>
 #include <condition_variable>
 #include <mutex>
 #include <vector>
@@ -69,9 +70,11 @@ bool PBFTGoodNode::AllCommitMsgExist() {
 
 bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command) {
   // Pre-prepare stage
+  std::cout << "in command validation\n";
   if (leader_) {
     // Has client request (from simulation)
     ReceiveRequestMsg(command);
+    std::cout << "leader received request\n";
 
     PBFTMessage pre_prepare_msg = GeneratePrePrepareMsg();
     for (uint64_t j = 0; j < nodes.size(); ++j) {
@@ -80,8 +83,11 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
         nodes[j]->SendMessage(pre_prepare_msg);
       }
     }
+
+    std::cout << "leader sent pre-prepare msgs\n";
   } else {
     std::vector<PBFTMessage> pre_prepare_msgs = ReceivePrePrepareMsg();
+    std::cout << "replica received pre-prepare msgs\n";
       if (pre_prepare_msgs.size() != 1) {
         return false;
       }
@@ -95,6 +101,7 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
       }
 
       SetPrePrepareMsgState(pre_prepare_msg);
+      std::cout << "replica passed pre-prepare msgs validation\n";
   }
 
   // Prepare stage
@@ -106,6 +113,7 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
       nodes[j]->SendMessage(prepare_msg);
     }
   }
+  std::cout << "node sent prepare msgs\n";
 
   std::vector<PBFTMessage> prepare_msgs = ReceivePrepareMsg();
   uint64_t valid_prepare_msg_count = 0;
@@ -126,6 +134,8 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
   if (valid_prepare_msg_count < f_ * 2) {
     return false;
   }
+
+  std::cout << "node passed prepare msg validation\n";
 
   // Commit stage
   // Send out commit messages
@@ -149,6 +159,7 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
 }
 
 void PBFTGoodNode::ExecuteCommand(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command, std::promise<std::string>&& val) {
+  std::cout << "in execute command\n";
   while (!CommandValidation(nodes, command)) {
     // TODO: view change
   }

@@ -13,6 +13,9 @@ class PBFTGoodNode : public PBFTNode {
   public:
     PBFTGoodNode(bool faulty, uint64_t id, uint64_t num_nodes, uint64_t leader, uint64_t f) : PBFTNode(faulty, id, num_nodes, leader, f) {
       type_ = PBFTNodeType::GOOD_NODE;
+      if (leader == id) {
+        leader_ = true;
+      }
     }
 
     void ExecuteCommand(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command, std::promise<std::string>&& val) override;
