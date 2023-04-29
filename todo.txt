@@ -1,12 +1,12 @@
 abi todo
-8. use log_
-7. write bad nodes
-9. view change 
-10. write bad node that just returns inconsistent results
-11. test
-12. write longer tests
-13. write testing script thing
+1. write wrong node
+2. view change 
+3. test
+4. write non responsive node
+5. test
+6. write longer tests
+7. write testing script thing
 
 tianqin todo
-14. alberts algo
-15. compile and test
+1. alberts algo
+2. compile and test

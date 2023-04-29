@@ -2,7 +2,8 @@
 #define __PBFT_SERVICE_H__
 
 #include "service.h"
-#include "pbft_nodes.h"
+#include "pbft_node.h"
+#include "pbft_good_node.h"
 
 #include <memory>
 #include <random>
