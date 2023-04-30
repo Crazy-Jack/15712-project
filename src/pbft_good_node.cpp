@@ -11,6 +11,7 @@
 #include "pbft_good_node.h"
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <iostream>
 #include <condition_variable>

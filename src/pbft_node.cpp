@@ -9,6 +9,7 @@
 #include "lib.h"
 
 #include <sstream>
+#include <iterator>
 
 ClientReq process_client_req(const std::string& command) {
   ClientReqType type;

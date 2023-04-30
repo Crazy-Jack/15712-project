@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <iterator>
 #include <string>
 
 #ifndef __NON_REPLICATED_SERVICE_H__
