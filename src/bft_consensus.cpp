@@ -55,7 +55,7 @@ public:
         return output_value != -1;
     }
 
-private:
+
     std::map<int, std::vector<Message>> received_messages;
 };
 
@@ -118,13 +118,22 @@ void bft_consensus(std::vector<Node>& nodes) {
         for (Node& node : nodes) {
             node.store_phase(node.phase + 1);
         }
+        std::cout << "Phase: " << nodes[0].phase << std::endl;
 
         // Round 1
+        std::cout << "Round 1" << std::endl;
         for (Node& node : nodes) {
             round_1(node, f);
         }
 
+        // Print the local variables of each node after Round 1
+        for (const Node& node : nodes) {
+            std::cout << "Node " << node.id << " local variable: " << node.local_variable.value << std::endl;
+        }
+
+
         // Round 2
+        std::cout << "Round 2" << std::endl;
         for (Node& node : nodes) {
             node.send_message_to_all(node.local_variable);
 
@@ -150,7 +159,13 @@ void bft_consensus(std::vector<Node>& nodes) {
             }
         }
 
+        // Print the local variables of each node after Round 2
+        for (const Node& node : nodes) {
+            std::cout << "Node " << node.id << " local variable: " << node.local_variable.value << std::endl;
+        }
+
         // Round 3
+        std::cout << "Round 3" << std::endl;
         for (Node& node : nodes) {
             node.send_message_to_all(node.local_variable);
 
@@ -174,6 +189,12 @@ void bft_consensus(std::vector<Node>& nodes) {
             }
         }
 
+        // Print the local variables of each node after Round 3
+        for (const Node& node : nodes) {
+            std::cout << "Node " << node.id << " local variable: " << node.local_variable.value << std::endl;
+        }
+
+        
         // Check if all nodes have reached a consensus
         consensus_reached = true;
         for (const Node& node : nodes) {
