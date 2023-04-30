@@ -1,7 +1,6 @@
 abi todo
-3. test wrong node
-6. write longer tests
-7. write testing script thing
+1. write longer tests
+2. write testing script thing
 
 tianqin todo
 1. alberts algo

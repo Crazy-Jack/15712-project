@@ -14,10 +14,10 @@ LOWVAL = 1
 HIGHVAL = 10
 
 # Create parser
-parser = argparse.ArgumentParser()
-parser.add_argument("-t", "--tracefile", action='store')
-parser.add_argument("-n", "--num-commands", action='store', type=int)
-parser.add_argument("-s", "--seed", action='store', type=int)
+parser = argparse.ArgumentParser(description="generates trace files for the simulator")
+parser.add_argument("-t", "--tracefile", action='store', help='the name of the tracefile the program generating')
+parser.add_argument("-n", "--num-commands", action='store', type=int, help='the number of commands the tracefile has')
+parser.add_argument("-s", "--seed", action='store', type=int, help='the random seed used to parse the program')
 args = parser.parse_args()
 args_dict = vars(args)
 
