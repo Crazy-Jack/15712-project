@@ -74,6 +74,39 @@ std::vector<Node> create_nodes() {
     return nodes;
 }
 
+
+void round_1(Node& alpha, int f) {
+    alpha.send_message_to_all(alpha.local_variable);
+
+    int bot_count = 0;
+    int non_bot_count = 0;
+
+    for (const Message& msg : alpha.received_messages[alpha.id]) {
+        if (msg.value == -1) {
+            bot_count++;
+        } else {
+            non_bot_count++;
+        }
+    }
+
+    if (bot_count >= 2 * f + 1) {
+        alpha.local_variable = Message::BOT();
+        alpha.send_message_to_all(alpha.local_variable);
+        alpha.output_value = -1; // Output ⊥
+    } else if (non_bot_count >= 2 * f + 1) {
+        // Find and set the first non-bot message
+        for (const Message& msg : alpha.received_messages[alpha.id]) {
+            if (msg.value != -1) {
+                alpha.local_variable = msg;
+                break;
+            }
+        }
+    } else {
+        alpha.local_variable = Message::BOT();
+    }
+}
+
+
 void bft_consensus(std::vector<Node>& nodes) {
     int num_nodes = nodes.size();
     bool consensus_reached = false;
@@ -88,20 +121,30 @@ void bft_consensus(std::vector<Node>& nodes) {
 
         // Round 1
         for (Node& node : nodes) {
-            node.send_message_to_all(node.local_variable);
+            round_1(node, f);
         }
 
         // Round 2
         for (Node& node : nodes) {
+            node.send_message_to_all(node.local_variable);
+
             int non_bot_count = 0;
             for (const Message& msg : node.received_messages[node.id]) {
                 if (msg.value != -1) {
                     non_bot_count++;
                 }
             }
+
             if (non_bot_count >= 2 * f + 1) {
-                node.local_variable = node.received_messages[node.id][0]; // Use the first non-bot message
+                // Find and set the first non-bot message
+                for (const Message& msg : node.received_messages[node.id]) {
+                    if (msg.value != -1) {
+                        node.local_variable = msg;
+                        break;
+                    }
+                }
                 node.send_message_to_all(node.local_variable);
+                node.output_value = node.local_variable.value;
             } else {
                 node.local_variable = Message::BOT();
             }
@@ -109,15 +152,23 @@ void bft_consensus(std::vector<Node>& nodes) {
 
         // Round 3
         for (Node& node : nodes) {
+            node.send_message_to_all(node.local_variable);
+
             int non_bot_count = 0;
             for (const Message& msg : node.received_messages[node.id]) {
                 if (msg.value != -1) {
                     non_bot_count++;
                 }
             }
+
             if (non_bot_count >= 2 * f + 1) {
-                node.local_variable = node.received_messages[node.id][0]; // Use the first non-bot message
-                node.output_value = node.local_variable.value;
+                // Find and set the first non-bot message
+                for (const Message& msg : node.received_messages[node.id]) {
+                    if (msg.value != -1) {
+                        node.local_variable = msg;
+                        break;
+                    }
+                }
             } else {
                 node.local_variable = Message::BOT();
             }
@@ -133,6 +184,7 @@ void bft_consensus(std::vector<Node>& nodes) {
         }
     }
 }
+
 
 
 int main() {
