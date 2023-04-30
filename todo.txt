@@ -1,6 +1,7 @@
 abi todo
-1. write longer tests
-2. write testing script thing
+1. graphs
+2. slides
+3. report
 
 tianqin todo
 1. alberts algo

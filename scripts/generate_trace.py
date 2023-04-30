@@ -43,5 +43,5 @@ for i in range(1, num_commands):
         file_to_write.write("g\n")
     else:
       val = random.randint(LOWVAL, HIGHVAL)
-      str = "s " + str(val) + "\n"
-      file_to_write.write(str)
+      val_str = "s " + str(val) + "\n"
+      file_to_write.write(val_str)
