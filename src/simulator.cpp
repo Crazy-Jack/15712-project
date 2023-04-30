@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
   if (mode == 0) {
     service = std::make_shared<NonReplicatedService>();
   } else if (mode == 1) {
-    service = std::make_shared<PBFTService>(faulty_nodes, 0, true);
+    service = std::make_shared<PBFTService>(faulty_nodes, byzantine_mode, true);
   }
 
   // Parse the tracefile. 

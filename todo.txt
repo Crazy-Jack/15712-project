@@ -1,8 +1,5 @@
 abi todo
-1. write wrong node
-3. test
-4. write non responsive node
-5. test
+3. test wrong node
 6. write longer tests
 7. write testing script thing
 

@@ -87,7 +87,7 @@ class PBFTGoodNode : public PBFTNode {
     std::vector<PBFTMessage> view_change_msgs_;
 
     // Static member to account for global timer (in milliseconds)
-    static const uint64_t timeout{500};
+    static const uint64_t timeout{5000};
 };
 
 #endif // __PBFT_GOOD_NODE_H__

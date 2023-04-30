@@ -89,7 +89,7 @@ bool PBFTGoodNode::AllNewViewMsgExist(std::chrono::time_point<std::chrono::stead
 
 bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command) {
   // Pre-prepare stage
-  std::cout << "in command validation\n";
+  std::cout << "in command validation with id = " << id_ << std::endl;
   if (leader_) {
     // Has client request (from simulation)
     ReceiveRequestMsg(command);
@@ -107,20 +107,22 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
   } else {
     std::vector<PBFTMessage> pre_prepare_msgs = ReceivePrePrepareMsg();
     std::cout << "replica received pre-prepare msgs\n";
-      if (pre_prepare_msgs.size() != 1) {
-        return false;
-      }
+    std::cout << pre_prepare_msgs.size() << std::endl;
+    if (pre_prepare_msgs.empty()) return false;
 
-      // TODO: faulty node threshold
-      PBFTMessage &pre_prepare_msg = pre_prepare_msgs[0];
-      if (pre_prepare_msg.type_ != PBFTMessageType::PREPREPARE
-      || pre_prepare_msg.data_hash_ != sha256(pre_prepare_msg.data_)
-      || pre_prepare_msg.sender_ != pre_prepare_msg.view_number_) {
-        return false;
+    PBFTMessage right_preprepare_msg;
+    for (auto& msg : pre_prepare_msgs) {
+      if (msg.type_ == PBFTMessageType::PREPREPARE
+      && msg.data_hash_ == sha256(msg.data_)
+      && msg.sender_ == msg.view_number_
+      && msg.sender_ == view_number_) {
+        right_preprepare_msg = msg;
+        break;
       }
+    }
 
-      SetPrePrepareMsgState(pre_prepare_msg);
-      std::cout << "replica passed pre-prepare msgs validation\n";
+    SetPrePrepareMsgState(right_preprepare_msg);
+    std::cout << "replica passed pre-prepare msgs validation\n";
   }
 
   // Prepare stage
@@ -140,13 +142,12 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
     // view number, sequence number, hash
     // checks signatures (hash, here), replica number = current view, 2f prepare
     // messages match w the pre-prepare message
+    std::cout << "Prepare msg sent: " << msg.ToStr() << std::endl;
     if (msg.type_ == PBFTMessageType::PREPARE
      && msg.data_hash_ == prepare_msg.data_hash_
      && msg.view_number_ == prepare_msg.view_number_
      && msg.sequence_number_ == prepare_msg.sequence_number_) {
       valid_prepare_msg_count += 1;
-    } else if (msg.type_ == PBFTMessageType::PREPREPARE) {
-      return false;
     }
   }
 
@@ -168,13 +169,14 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
   }
 
   std::vector<PBFTMessage> commit_msgs = ReceiveCommitMsg();
+  uint64_t counter = 0;
   for (const auto &msg : commit_msgs) {
     if (msg.type_ == PBFTMessageType::PREPREPARE) {
-      return false;
+      counter += 1;
     }
   }
 
-  return commit_msgs.size() >= 2 * f_;
+  return (commit_msgs.size() - counter) >= 2 * f_;
 }
 
 // Simplified view change protocol. 
@@ -183,7 +185,7 @@ void PBFTGoodNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
   assert(!leader_);
   while (true) {
     PBFTMessage view_change_msg = GenerateViewChangeMsg();
-    uint64_t leader_iteration = view_change_msg.view_number_;
+    uint64_t leader_iteration = view_change_msg.view_number_ + 1;
     for (uint64_t j = 0; j < nodes.size(); ++j) {
       if (j == GetId()) {
         continue;
@@ -214,9 +216,12 @@ void PBFTGoodNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
         nodes[j]->SendMessage(new_view_msg);
         }
       }
+
+      new_view_number = leader_iteration;
       break;
     } else {
       std::vector<PBFTMessage> new_view_msgs = ReceiveNewViewMsg();
+      std::cout << "replica " << id_ << "received new view messages\n";
       if (new_view_msgs.size() != 1) {
         continue;
       }
@@ -227,11 +232,15 @@ void PBFTGoodNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
         continue;
       }
 
+      std::cout << "replica " << id_ << "validated new view message\n";
+
       std::vector<PBFTMessage> vc_msg_from_leader;
       for (auto &str : new_view_msg.view_change_msgs_) {
         vc_msg_from_leader.push_back(StrToPBFTMessage(str));
       }
+
       std::vector<PBFTMessage> view_change_msgs = ReceiveViewChangeMsg();
+      std::cout << "replica " << id_ << "received view change message\n";
       if (view_change_msgs.size() != vc_msg_from_leader.size()
       || view_change_msgs.size() != 2 * f_) {
         continue;
@@ -258,10 +267,17 @@ void PBFTGoodNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
         }
       }
 
+      std::cout << "replica " << id_ << "finished map construction\n";
+
       bool valid_map = true;
+      std::cout << "leader iteration: " << leader_iteration;
+      std::cout << ", id: " << id_ << std::endl;
       for (auto &elem : sender_to_count_map) {
-        if ((elem.first == id_ || elem.first == leader_iteration) && elem.second != 1) {
-          valid_map = false;
+        std::cout << elem.first << ": " << elem.second << std::endl;
+        if (elem.first == id_ || elem.first == leader_iteration) {
+          if (elem.second != 1UL) {
+            valid_map = false;
+          }
         } else if (elem.second != 2) {
           valid_map = false;
         }
@@ -271,13 +287,23 @@ void PBFTGoodNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
         continue;
       }
 
+      std::cout << "replica " << id_ << "validated view change message\n";
+
+      new_view_number = leader_iteration;
       break;
     }
   }
 
   // Update local state.
   view_number_ = new_view_number;
+  std::cout << "new leader: " << view_number_ << std::endl;
+  if (view_number_ == id_) {
+    leader_ = true;
+  } else {
+    leader_ = false;
+  }
   ClearQueue(view_number_);
+  view_change_msgs_.clear();
 }
 
 void PBFTGoodNode::ExecuteCommand(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command, std::promise<std::string>&& val) {
@@ -286,6 +312,7 @@ void PBFTGoodNode::ExecuteCommand(std::vector<std::shared_ptr<PBFTNode>>& nodes,
     ViewChange(nodes);
   }
 
+  local_sequence_num_ += 1;
   val.set_value(ReplyRequest());
 }
 
@@ -300,7 +327,6 @@ void PBFTGoodNode::ReceiveRequestMsg(const std::string& command) {
  * PRE-PREPARE STAGE
  **************************/
 PBFTMessage PBFTGoodNode::GeneratePrePrepareMsg() {
-  local_sequence_num_ += 1;
   local_view_number_ = GetId();
   return PBFTMessage(PBFTMessageType::PREPREPARE, GetId(), GetId(), local_sequence_num_, local_message_);
 }

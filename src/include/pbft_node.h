@@ -92,6 +92,7 @@ class PBFTNode : public Node {
     ,f_(f) {}
 
     void SendMessage(PBFTMessage message);
+    void SendNotifyAll();
     virtual void ExecuteCommand(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command, std::promise<std::string>&& val) = 0;
   protected:
     std::list<PBFTMessage> queue_;

@@ -121,16 +121,21 @@ bool PBFTWrongNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& no
   } else {
     std::vector<PBFTMessage> pre_prepare_msgs = ReceivePrePrepareMsg();
     std::cout << "BAD: replica received pre-prepare msgs\n";
-    PBFTMessage &pre_prepare_msg = pre_prepare_msgs[0];
-    ClientReq req = process_client_req(pre_prepare_msg.data_);
-    if (req.type_ == ClientReqType::PBFT_GET) {
-      modify_msg(pre_prepare_msg, "SET 2");
-    } else {
-      modify_msg(pre_prepare_msg, "SET " + std::to_string(req.num_ + 1));
-    }
+    if (pre_prepare_msgs.size() > 0) {
+      PBFTMessage &pre_prepare_msg = pre_prepare_msgs[0];
+      ClientReq req = process_client_req(pre_prepare_msg.data_);
+      if (req.type_ == ClientReqType::PBFT_GET) {
+        modify_msg(pre_prepare_msg, "SET 2");
+      } else {
+        modify_msg(pre_prepare_msg, "SET " + std::to_string(req.num_ + 1));
+      }
 
       SetPrePrepareMsgState(pre_prepare_msg);
-      std::cout << "BAD: replica passed pre-prepare msgs validation\n";
+    } else {
+      local_message_ = "SET 712";
+      local_view_number_ = id_;
+      local_sequence_num_ = 2;
+    }
   }
 
   // Prepare stage
@@ -167,10 +172,9 @@ bool PBFTWrongNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& no
 // Simplified view change protocol. 
 void PBFTWrongNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
   uint64_t new_view_number;
-  assert(!leader_);
   while (true) {
     PBFTMessage view_change_msg = GenerateViewChangeMsg();
-    uint64_t leader_iteration = view_change_msg.view_number_;
+    uint64_t leader_iteration = view_change_msg.view_number_ + 1;
     for (uint64_t j = 0; j < nodes.size(); ++j) {
       if (j == GetId()) {
         continue;
@@ -201,9 +205,12 @@ void PBFTWrongNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
         nodes[j]->SendMessage(new_view_msg);
         }
       }
+
+      new_view_number = leader_iteration;
       break;
     } else {
       std::vector<PBFTMessage> new_view_msgs = ReceiveNewViewMsg();
+      std::cout << "replica " << id_ << "received new view messages\n";
       if (new_view_msgs.size() != 1) {
         continue;
       }
@@ -214,11 +221,15 @@ void PBFTWrongNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
         continue;
       }
 
+      std::cout << "replica " << id_ << "validated new view message\n";
+
       std::vector<PBFTMessage> vc_msg_from_leader;
       for (auto &str : new_view_msg.view_change_msgs_) {
         vc_msg_from_leader.push_back(StrToPBFTMessage(str));
       }
+
       std::vector<PBFTMessage> view_change_msgs = ReceiveViewChangeMsg();
+      std::cout << "replica " << id_ << "received view change message\n";
       if (view_change_msgs.size() != vc_msg_from_leader.size()
       || view_change_msgs.size() != 2 * f_) {
         continue;
@@ -245,10 +256,17 @@ void PBFTWrongNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
         }
       }
 
+      std::cout << "replica " << id_ << "finished map construction\n";
+
       bool valid_map = true;
+      std::cout << "leader iteration: " << leader_iteration;
+      std::cout << ", id: " << id_ << std::endl;
       for (auto &elem : sender_to_count_map) {
-        if ((elem.first == id_ || elem.first == leader_iteration) && elem.second != 1) {
-          valid_map = false;
+        std::cout << elem.first << ": " << elem.second << std::endl;
+        if (elem.first == id_ || elem.first == leader_iteration) {
+          if (elem.second != 1UL) {
+            valid_map = false;
+          }
         } else if (elem.second != 2) {
           valid_map = false;
         }
@@ -258,14 +276,25 @@ void PBFTWrongNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
         continue;
       }
 
+      std::cout << "replica " << id_ << "validated view change message\n";
+
+      new_view_number = leader_iteration;
       break;
     }
   }
 
   // Update local state.
   view_number_ = new_view_number;
+  std::cout << "new leader: " << view_number_ << std::endl;
+  if (view_number_ == id_) {
+    leader_ = true;
+  } else {
+    leader_ = false;
+  }
   ClearQueue(view_number_);
+  view_change_msgs_.clear();
 }
+
 
 void PBFTWrongNode::ExecuteCommand(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command, std::promise<std::string>&& val) {
   std::cout << "BAD: in execute command\n";

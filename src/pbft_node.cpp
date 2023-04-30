@@ -83,6 +83,10 @@ void PBFTNode::SendMessage(PBFTMessage message) {
   queue_cond_var_.notify_all();
 }
 
+void PBFTNode::SendNotifyAll() {
+  queue_cond_var_.notify_all();
+}
+
 bool str_starts_with(const std::string &str, const std::string &prefix) {
     return str.size() >= prefix.size() && str.compare(0, prefix.size(), prefix) == 0;
 }
@@ -97,16 +101,19 @@ PBFTMessage StrToPBFTMessage(std::string str) {
       std::string type = substring.substr(6, substring.size() - 6);
       pbft_message.type_ = StrToPBFTMessageType(type);
     } else if (str_starts_with(substring, " Sender: ")) {
-      uint64_t sender = static_cast<uint64_t>(std::stoi(substring.substr(9, substring.size() - 9)));
+      std::string sender_str = substring.substr(9, substring.size() - 9);
+      uint64_t sender = static_cast<uint64_t>(std::stoi(sender_str));
       pbft_message.sender_ = sender;
     } else if (str_starts_with(substring, " View Num: ")) {
-      uint64_t view_number = static_cast<uint64_t>(std::stoi(substring.substr(11, substring.size() - 11)));
+      std::string view_num_str = substring.substr(11, substring.size() - 11);
+      uint64_t view_number = static_cast<uint64_t>(std::stoi(view_num_str));
       pbft_message.view_number_ = view_number;
     } else if (str_starts_with(substring, " Sequence Number: ")) {
-      uint64_t seq_num = static_cast<uint64_t>(std::stoi(substring.substr(19, substring.size() - 19)));
+      std::string seq_num_str = substring.substr(18, substring.size() - 18);
+      uint64_t seq_num = static_cast<uint64_t>(std::stoi(seq_num_str));
       pbft_message.sequence_number_ = seq_num;
     } else if (str_starts_with(substring, " Data: ")) {
-      std::string data = substring.substr(8, substring.size() - 8);
+      std::string data = substring.substr(7, substring.size() - 7);
       pbft_message.data_ = data;
       pbft_message.data_hash_ = sha256(data);
     }
