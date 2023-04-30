@@ -6,6 +6,7 @@ Arguments to simulator:
 -t tracefile with client commands
 -b number representing what kind of faulty behaviors of Byzantine nodes
 -r reliability (true or false, do good nodes die accidentally)
+-m (mode of service. 0 is unreplicated service, 1 is PBFT, 2 is BB algo)
 ```
 
 To build:
