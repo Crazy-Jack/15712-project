@@ -11,9 +11,11 @@
 #include "pbft_good_node.h"
 
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <condition_variable>
 #include <mutex>
+#include <unordered_map>
 #include <vector>
 
 /** ***********************
@@ -36,36 +38,68 @@ ClientReq process_client_req(const std::string& command) {
 }
 
 /** Checks for the existence of one pre-prepare message. */
-bool PBFTGoodNode::AllPrePrepareMsgExist() {
+bool PBFTGoodNode::AllPrePrepareMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   // Assumes you have the queue lock.
   for (const auto& msg : queue_) {
     if (msg.type_ == PBFTMessageType::PREPREPARE) {
       return true;
     }
   }
-  return false;
+  std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+  uint64_t milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+  return milliseconds > timeout;
 }
 
 /** Checks for the existence of 3f prepare messages. */
-bool PBFTGoodNode::AllPrepareMsgExist() {
+bool PBFTGoodNode::AllPrepareMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   uint64_t count = 0;
   for (const auto& msg : queue_) {
     if (msg.type_ == PBFTMessageType::PREPARE) {
       count += 1;
     }
   }
-  return count == f_ * 3;
+  std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+  uint64_t milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+  return count == f_ * 3 || milliseconds > timeout;
 }
 
 /** Checks for the existence of 3f commit messages. */
-bool PBFTGoodNode::AllCommitMsgExist() {
+bool PBFTGoodNode::AllCommitMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   uint64_t count = 0;
   for (const auto& msg : queue_) {
     if (msg.type_ == PBFTMessageType::COMMIT) {
       count += 1;
     }
   }
-  return count == f_ * 3;
+  std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+  uint64_t milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+  return count == f_ * 3 || milliseconds > timeout;
+}
+
+/** Checks for the existence of 2f view change messages. */
+bool PBFTGoodNode::AllViewChangeMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
+  uint64_t count = 0;
+  for (const auto& msg : queue_) {
+    if (msg.type_ == PBFTMessageType::VIEWCHANGE) {
+      count += 1;
+    }
+  }
+  std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+  uint64_t milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+  return count == f_ * 2 || milliseconds > timeout;
+}
+
+/** Checks for the existence of one new view message. */
+bool PBFTGoodNode::AllNewViewMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
+  // Assumes you have the queue lock.
+  for (const auto& msg : queue_) {
+    if (msg.type_ == PBFTMessageType::NEWVIEW) {
+      return true;
+    }
+  }
+  std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+  uint64_t milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+  return milliseconds > timeout;
 }
 
 bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command) {
@@ -158,10 +192,113 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
   return commit_msgs.size() >= 2 * f_;
 }
 
+// Simplified view change protocol. 
+void PBFTGoodNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
+  uint64_t new_view_number;
+  assert(!leader_);
+  while (true) {
+    PBFTMessage view_change_msg = GenerateViewChangeMsg();
+    uint64_t leader_iteration = view_change_msg.view_number_;
+    for (uint64_t j = 0; j < nodes.size(); ++j) {
+      if (j == GetId()) {
+        continue;
+      } else {
+      nodes[j]->SendMessage(view_change_msg);
+      }
+    }
+
+    if (id_ == leader_iteration) {
+      std::vector<PBFTMessage> view_change_msgs = ReceiveViewChangeMsg();
+      uint64_t count = 0;
+      for (auto &msg : view_change_msgs) {
+        if (msg.view_number_ == view_change_msg.view_number_
+        || msg.sequence_number_ == view_change_msg.sequence_number_) {
+          count += 1;
+        }
+      }
+
+      if (count < 2 * f_) {
+        continue;
+      }
+
+      PBFTMessage new_view_msg = GenerateNewViewMsg();
+      for (uint64_t j = 0; j < nodes.size(); ++j) {
+        if (j == GetId()) {
+          continue;
+        } else {
+        nodes[j]->SendMessage(new_view_msg);
+        }
+      }
+      break;
+    } else {
+      std::vector<PBFTMessage> new_view_msgs = ReceiveNewViewMsg();
+      if (new_view_msgs.size() != 1) {
+        continue;
+      }
+
+      PBFTMessage& new_view_msg = new_view_msgs[0];
+      if (new_view_msg.view_number_ != leader_iteration
+      || new_view_msg.sequence_number_ != view_change_msg.sequence_number_) {
+        continue;
+      }
+
+      std::vector<PBFTMessage> vc_msg_from_leader;
+      for (auto &str : new_view_msg.view_change_msgs_) {
+        vc_msg_from_leader.push_back(StrToPBFTMessage(str));
+      }
+      std::vector<PBFTMessage> view_change_msgs = ReceiveViewChangeMsg();
+      if (view_change_msgs.size() != vc_msg_from_leader.size()
+      || view_change_msgs.size() != 2 * f_) {
+        continue;
+      }
+
+      std::unordered_map<uint64_t, uint64_t> sender_to_count_map;
+      for (auto &msg : vc_msg_from_leader) {
+        if (msg.view_number_ == leader_iteration 
+         && msg.sequence_number_ == view_change_msg.sequence_number_
+         && msg.type_ == PBFTMessageType::VIEWCHANGE) {
+          sender_to_count_map.insert(std::make_pair(msg.sender_, 1));
+        }
+      }
+
+      for (auto &msg : view_change_msgs) {
+        if (msg.view_number_ == leader_iteration 
+         && msg.sequence_number_ == view_change_msg.sequence_number_
+         && msg.type_ == PBFTMessageType::VIEWCHANGE) {
+          if (sender_to_count_map.find(msg.sender_) == sender_to_count_map.end()) {
+            sender_to_count_map.insert(std::make_pair(msg.sender_, 1));
+          } else {
+            sender_to_count_map[msg.sender_] += 1;
+          }
+        }
+      }
+
+      bool valid_map = true;
+      for (auto &elem : sender_to_count_map) {
+        if ((elem.first == id_ || elem.first == leader_iteration) && elem.second != 1) {
+          valid_map = false;
+        } else if (elem.second != 2) {
+          valid_map = false;
+        }
+      }
+
+      if (!valid_map) {
+        continue;
+      }
+
+      break;
+    }
+  }
+
+  // Update local state.
+  view_number_ = new_view_number;
+  ClearQueue(view_number_);
+}
+
 void PBFTGoodNode::ExecuteCommand(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command, std::promise<std::string>&& val) {
   std::cout << "in execute command\n";
   while (!CommandValidation(nodes, command)) {
-    // TODO: view change
+    ViewChange(nodes);
   }
 
   val.set_value(ReplyRequest());
@@ -185,7 +322,8 @@ PBFTMessage PBFTGoodNode::GeneratePrePrepareMsg() {
 
 std::vector<PBFTMessage> PBFTGoodNode::ReceivePrePrepareMsg() {
   std::unique_lock lk(queue_lock_);
-  queue_cond_var_.wait(lk, [&]{return AllPrePrepareMsgExist();});
+  std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+  queue_cond_var_.wait(lk, [&]{return AllPrePrepareMsgExist(start);});
 
   std::vector<PBFTMessage> res;
   for (auto &elem : queue_) {
@@ -218,7 +356,8 @@ PBFTMessage PBFTGoodNode::GeneratePrepareMsg() {
 
 std::vector<PBFTMessage> PBFTGoodNode::ReceivePrepareMsg()  {
   std::unique_lock lk(queue_lock_);
-  queue_cond_var_.wait(lk, [&]{return AllPrepareMsgExist();});
+  std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+  queue_cond_var_.wait(lk, [&]{return AllPrepareMsgExist(start);});
 
   std::vector<PBFTMessage> res;
 
@@ -248,7 +387,8 @@ PBFTMessage PBFTGoodNode::GenerateCommitMsg()  {
 
 std::vector<PBFTMessage> PBFTGoodNode::ReceiveCommitMsg()  {
   std::unique_lock lk(queue_lock_);
-  queue_cond_var_.wait(lk, [&]{return AllCommitMsgExist();});
+  std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+  queue_cond_var_.wait(lk, [&]{return AllCommitMsgExist(start);});
 
   std::vector<PBFTMessage> res;
 
@@ -274,6 +414,8 @@ std::vector<PBFTMessage> PBFTGoodNode::ReceiveCommitMsg()  {
  * REPLY STAGE
  **************************/
 std::string PBFTGoodNode::ReplyRequest()  {
+  valid_sequence_num_ = local_sequence_num_;
+
   ClientReq req = process_client_req(local_message_);
   if (req.type_ == ClientReqType::PBFT_GET) {
     return std::to_string(val_);
@@ -281,4 +423,77 @@ std::string PBFTGoodNode::ReplyRequest()  {
 
   val_ = req.num_;
   return "SET " + std::to_string(req.num_);
+}
+
+/** ***********************
+ * VIEW CHANGE/NEW VIEW STAGE
+ **************************/
+PBFTMessage PBFTGoodNode::GenerateViewChangeMsg() {
+  uint64_t total_nodes = (3 * f_) + 1;
+  return PBFTMessage(PBFTMessageType::VIEWCHANGE, id_, (view_number_ + 1) % total_nodes, valid_sequence_num_, "");
+}
+
+std::vector<PBFTMessage> PBFTGoodNode::ReceiveViewChangeMsg() {
+  std::unique_lock lk(queue_lock_);
+  std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+  queue_cond_var_.wait(lk, [&]{return AllViewChangeMsgExist(start);});
+
+  std::vector<PBFTMessage> res;
+
+  // We collect pre-prepare messages at any stage because it indicates a faulty leader node/another
+  // node is attempting to masquerade as leader.
+  for (auto &elem : queue_) {
+    if (elem.type_ == PBFTMessageType::VIEWCHANGE) {
+      res.push_back(elem);
+      view_change_msgs_.push_back(elem);
+    }
+  }
+
+  queue_.erase(std::remove_if(queue_.begin(), 
+                              queue_.end(),
+                              [](PBFTMessage &elem) { return elem.type_ == PBFTMessageType::VIEWCHANGE; }),
+               queue_.end());
+
+  lk.unlock();
+  return res;
+}
+
+PBFTMessage PBFTGoodNode::GenerateNewViewMsg() {
+  PBFTMessage msg = PBFTMessage(PBFTMessageType::NEWVIEW, id_, id_, valid_sequence_num_, "");
+  std::vector<std::string> msgs_as_str;
+  for (auto & vc_msg : view_change_msgs_) {
+    msg.view_change_msgs_.push_back(vc_msg.ToStr());
+  }
+  return msg;
+}
+
+std::vector<PBFTMessage> PBFTGoodNode::ReceiveNewViewMsg() {
+  std::unique_lock lk(queue_lock_);
+  std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+  queue_cond_var_.wait(lk, [&]{return AllNewViewMsgExist(start);});
+
+  std::vector<PBFTMessage> res;
+  for (auto &elem : queue_) {
+    if (elem.type_ == PBFTMessageType::NEWVIEW) {
+      res.push_back(elem);
+    }
+  }
+
+  queue_.erase(std::remove_if(queue_.begin(), 
+                              queue_.end(),
+                              [](PBFTMessage &elem) { return elem.type_ == PBFTMessageType::NEWVIEW; }),
+               queue_.end());
+
+  lk.unlock();
+  return res;
+}
+
+void PBFTGoodNode::ClearQueue(uint64_t new_view_num) {
+  std::unique_lock lk(queue_lock_);
+  queue_.erase(std::remove_if(queue_.begin(), 
+                              queue_.end(),
+                              [&](PBFTMessage &elem) { return elem.view_number_ != new_view_num; }),
+               queue_.end());
+  lk.unlock();
+  view_change_msgs_.clear();
 }

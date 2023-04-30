@@ -35,11 +35,14 @@ enum PBFTMessageType : char {
   REQUEST,
   PREPREPARE,
   PREPARE,
-  COMMIT
+  COMMIT,
+  VIEWCHANGE,
+  NEWVIEW
 };
 
 /** Helper functions */
 std::string PBFTMessageTypeToStr(PBFTMessageType type);
+PBFTMessageType StrToPBFTMessageType(const std::string& str);
 
 struct PBFTMessage {
   PBFTMessageType type_;
@@ -48,7 +51,7 @@ struct PBFTMessage {
   uint64_t sequence_number_; // request number
   std::string data_;
   std::string data_hash_;
-  // other fields?
+  std::vector<std::string> view_change_msgs_;
 
   PBFTMessage() {}
 
@@ -70,6 +73,8 @@ struct PBFTMessage {
     + ", Sequence Number: " + std::to_string(sequence_number_) + ", Data: " + data_;
   }
 };
+
+PBFTMessage StrToPBFTMessage(std::string str);
 
 enum PBFTNodeType : char {
   GOOD_NODE,
