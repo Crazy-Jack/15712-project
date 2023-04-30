@@ -9,16 +9,25 @@
 const int f = 2; // number of faulty nodes
 const int NUM_NODES = 2 * f + 1;
 
+
 class Message {
 public:
     int value;
     int sender_id;
+    bool abort;
 
-    Message(int value, int sender_id) : value(value), sender_id(sender_id) {}
+
+    Message(int value, int sender_id, bool abort) : value(value), sender_id(sender_id), abort(abort) {}
 
     static Message BOT() {
-        return Message(-1, -1);
+        return Message(-1, -1, false);
     }
+
+    static Message BOT_Abort() {
+        return Message(-1, -1, true);
+    }
+
+
 };
 
 class Node {
@@ -26,10 +35,11 @@ public:
     int id;
     int phase;
     int output_value;
+    bool abort;
     Message local_variable;
     std::vector<Node*> neighbors;
 
-    Node(int id) : id(id), phase(0), output_value(-1), local_variable(Message::BOT()) {}
+    Node(int id) : id(id), phase(0), output_value(-1), abort(false), local_variable(Message::BOT()) {}
 
     void store_phase(int new_phase) {
         phase = new_phase;
@@ -75,7 +85,7 @@ std::vector<Node> create_nodes() {
 }
 
 
-void round_1(Node& alpha, int f) {
+bool round_1(Node& alpha, int f) {
     alpha.send_message_to_all(alpha.local_variable);
 
     int bot_count = 0;
@@ -90,9 +100,11 @@ void round_1(Node& alpha, int f) {
     }
 
     if (bot_count >= 2 * f + 1) {
+        // TODO: output Abort 
         alpha.local_variable = Message::BOT();
         alpha.send_message_to_all(alpha.local_variable);
         alpha.output_value = -1; // Output ⊥
+        return false;
     } else if (non_bot_count >= 2 * f + 1) {
         // Find and set the first non-bot message
         for (const Message& msg : alpha.received_messages[alpha.id]) {
@@ -101,8 +113,10 @@ void round_1(Node& alpha, int f) {
                 break;
             }
         }
+        return true;
     } else {
         alpha.local_variable = Message::BOT();
+        return true;
     }
 }
 
@@ -124,7 +138,9 @@ void bft_consensus(std::vector<Node>& nodes) {
         std::cout << "Round 1" << std::endl;
         for (Node& node : nodes) {
             round_1(node, f);
+            
         }
+        
 
         // Print the local variables of each node after Round 1
         for (const Node& node : nodes) {
@@ -194,7 +210,7 @@ void bft_consensus(std::vector<Node>& nodes) {
             std::cout << "Node " << node.id << " local variable: " << node.local_variable.value << std::endl;
         }
 
-        
+
         // Check if all nodes have reached a consensus
         consensus_reached = true;
         for (const Node& node : nodes) {
