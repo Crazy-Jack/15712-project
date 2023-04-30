@@ -10,6 +10,22 @@
 
 #include <sstream>
 
+ClientReq process_client_req(const std::string& command) {
+  ClientReqType type;
+  int num = 0;
+  if (command.compare("g") == 0) {
+    type = ClientReqType::PBFT_GET;
+  } else {
+    std::stringstream ss(command);  
+    std::istream_iterator<std::string> begin(ss);
+    std::istream_iterator<std::string> end;
+    std::vector<std::string> commands(begin, end);
+    type = ClientReqType::PBFT_SET;
+    num = std::stoi(commands[1]);
+  }
+  return ClientReq(type, num);
+}
+
 std::string PBFTMessageTypeToStr(PBFTMessageType type) {
   switch(type) {
     case PBFTMessageType::REQUEST: {

@@ -1,14 +1,14 @@
 /**
- * @file pbft_good_node.cpp
+ * @file pbft_wrong_node.cpp
  * @author Abigale Kim (abigalek)
- * @brief Implementation of good nodes for PBFT protocol.
+ * @brief Implementation of wrong nodes for PBFT protocol.
  * 
  * @copyright Copyright (c) 2023
  * 
  */
 
 #include "pbft_node.h"
-#include "pbft_good_node.h"
+#include "pbft_wrong_node.h"
 
 #include <algorithm>
 #include <chrono>
@@ -22,8 +22,13 @@
  * MISC. HELPER FUNCTIONS
  **************************/
 
+void modify_msg(PBFTMessage &msg, std::string data) {
+  msg.data_ = data;
+  msg.data_hash_ = sha256(data);
+}
+
 /** Checks for the existence of one pre-prepare message. */
-bool PBFTGoodNode::AllPrePrepareMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
+bool PBFTWrongNode::AllPrePrepareMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   // Assumes you have the queue lock.
   for (const auto& msg : queue_) {
     if (msg.type_ == PBFTMessageType::PREPREPARE) {
@@ -36,7 +41,7 @@ bool PBFTGoodNode::AllPrePrepareMsgExist(std::chrono::time_point<std::chrono::st
 }
 
 /** Checks for the existence of 3f prepare messages. */
-bool PBFTGoodNode::AllPrepareMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
+bool PBFTWrongNode::AllPrepareMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   uint64_t count = 0;
   for (const auto& msg : queue_) {
     if (msg.type_ == PBFTMessageType::PREPARE) {
@@ -49,7 +54,7 @@ bool PBFTGoodNode::AllPrepareMsgExist(std::chrono::time_point<std::chrono::stead
 }
 
 /** Checks for the existence of 3f commit messages. */
-bool PBFTGoodNode::AllCommitMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
+bool PBFTWrongNode::AllCommitMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   uint64_t count = 0;
   for (const auto& msg : queue_) {
     if (msg.type_ == PBFTMessageType::COMMIT) {
@@ -62,7 +67,7 @@ bool PBFTGoodNode::AllCommitMsgExist(std::chrono::time_point<std::chrono::steady
 }
 
 /** Checks for the existence of 2f view change messages. */
-bool PBFTGoodNode::AllViewChangeMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
+bool PBFTWrongNode::AllViewChangeMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   uint64_t count = 0;
   for (const auto& msg : queue_) {
     if (msg.type_ == PBFTMessageType::VIEWCHANGE) {
@@ -75,7 +80,7 @@ bool PBFTGoodNode::AllViewChangeMsgExist(std::chrono::time_point<std::chrono::st
 }
 
 /** Checks for the existence of one new view message. */
-bool PBFTGoodNode::AllNewViewMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
+bool PBFTWrongNode::AllNewViewMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   // Assumes you have the queue lock.
   for (const auto& msg : queue_) {
     if (msg.type_ == PBFTMessageType::NEWVIEW) {
@@ -87,40 +92,45 @@ bool PBFTGoodNode::AllNewViewMsgExist(std::chrono::time_point<std::chrono::stead
   return milliseconds > timeout;
 }
 
-bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command) {
+bool PBFTWrongNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command) {
   // Pre-prepare stage
-  std::cout << "in command validation\n";
+  std::cout << "BAD: in command validation\n";
   if (leader_) {
     // Has client request (from simulation)
     ReceiveRequestMsg(command);
-    std::cout << "leader received request\n";
+    std::cout << "BAD: leader received request\n";
 
     PBFTMessage pre_prepare_msg = GeneratePrePrepareMsg();
+
+    // Byzantine fun!
+    PBFTMessage get_preprepare_msg = pre_prepare_msg;
+    modify_msg(get_preprepare_msg, "GET");
+    PBFTMessage set_preprepare_msg = pre_prepare_msg;
+    modify_msg(set_preprepare_msg, "SET 1");
+
     for (uint64_t j = 0; j < nodes.size(); ++j) {
       if (GetId() == j) continue;
-      else {
-        nodes[j]->SendMessage(pre_prepare_msg);
+      else if (j % 2 == 0) {
+        nodes[j]->SendMessage(get_preprepare_msg);
+      } else {
+         nodes[j]->SendMessage(set_preprepare_msg);
       }
     }
 
-    std::cout << "leader sent pre-prepare msgs\n";
+    std::cout << "BAD: leader sent pre-prepare msgs\n";
   } else {
     std::vector<PBFTMessage> pre_prepare_msgs = ReceivePrePrepareMsg();
-    std::cout << "replica received pre-prepare msgs\n";
-      if (pre_prepare_msgs.size() != 1) {
-        return false;
-      }
-
-      // TODO: faulty node threshold
-      PBFTMessage &pre_prepare_msg = pre_prepare_msgs[0];
-      if (pre_prepare_msg.type_ != PBFTMessageType::PREPREPARE
-      || pre_prepare_msg.data_hash_ != sha256(pre_prepare_msg.data_)
-      || pre_prepare_msg.sender_ != pre_prepare_msg.view_number_) {
-        return false;
-      }
+    std::cout << "BAD: replica received pre-prepare msgs\n";
+    PBFTMessage &pre_prepare_msg = pre_prepare_msgs[0];
+    ClientReq req = process_client_req(pre_prepare_msg.data_);
+    if (req.type_ == ClientReqType::PBFT_GET) {
+      modify_msg(pre_prepare_msg, "SET 2");
+    } else {
+      modify_msg(pre_prepare_msg, "SET " + std::to_string(req.num_ + 1));
+    }
 
       SetPrePrepareMsgState(pre_prepare_msg);
-      std::cout << "replica passed pre-prepare msgs validation\n";
+      std::cout << "BAD: replica passed pre-prepare msgs validation\n";
   }
 
   // Prepare stage
@@ -132,29 +142,10 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
       nodes[j]->SendMessage(prepare_msg);
     }
   }
-  std::cout << "node sent prepare msgs\n";
+  std::cout << "BAD: node sent prepare msgs\n";
 
   std::vector<PBFTMessage> prepare_msgs = ReceivePrepareMsg();
-  uint64_t valid_prepare_msg_count = 0;
-  for (const auto& msg : prepare_msgs) {
-    // view number, sequence number, hash
-    // checks signatures (hash, here), replica number = current view, 2f prepare
-    // messages match w the pre-prepare message
-    if (msg.type_ == PBFTMessageType::PREPARE
-     && msg.data_hash_ == prepare_msg.data_hash_
-     && msg.view_number_ == prepare_msg.view_number_
-     && msg.sequence_number_ == prepare_msg.sequence_number_) {
-      valid_prepare_msg_count += 1;
-    } else if (msg.type_ == PBFTMessageType::PREPREPARE) {
-      return false;
-    }
-  }
-
-  if (valid_prepare_msg_count < f_ * 2) {
-    return false;
-  }
-
-  std::cout << "node passed prepare msg validation\n";
+  (void)prepare_msgs;
 
   // Commit stage
   // Send out commit messages
@@ -168,17 +159,13 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
   }
 
   std::vector<PBFTMessage> commit_msgs = ReceiveCommitMsg();
-  for (const auto &msg : commit_msgs) {
-    if (msg.type_ == PBFTMessageType::PREPREPARE) {
-      return false;
-    }
-  }
+  (void)commit_msgs; // clearing out the queue
 
-  return commit_msgs.size() >= 2 * f_;
+  return true;
 }
 
 // Simplified view change protocol. 
-void PBFTGoodNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
+void PBFTWrongNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
   uint64_t new_view_number;
   assert(!leader_);
   while (true) {
@@ -280,8 +267,8 @@ void PBFTGoodNode::ViewChange(std::vector<std::shared_ptr<PBFTNode>>& nodes) {
   ClearQueue(view_number_);
 }
 
-void PBFTGoodNode::ExecuteCommand(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command, std::promise<std::string>&& val) {
-  std::cout << "in execute command\n";
+void PBFTWrongNode::ExecuteCommand(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command, std::promise<std::string>&& val) {
+  std::cout << "BAD: in execute command\n";
   while (!CommandValidation(nodes, command)) {
     ViewChange(nodes);
   }
@@ -292,20 +279,20 @@ void PBFTGoodNode::ExecuteCommand(std::vector<std::shared_ptr<PBFTNode>>& nodes,
 /** ***********************
  * REQUEST STAGE
  **************************/
-void PBFTGoodNode::ReceiveRequestMsg(const std::string& command) {
+void PBFTWrongNode::ReceiveRequestMsg(const std::string& command) {
   local_message_ = command;
 }
 
 /** ***********************
  * PRE-PREPARE STAGE
  **************************/
-PBFTMessage PBFTGoodNode::GeneratePrePrepareMsg() {
+PBFTMessage PBFTWrongNode::GeneratePrePrepareMsg() {
   local_sequence_num_ += 1;
   local_view_number_ = GetId();
   return PBFTMessage(PBFTMessageType::PREPREPARE, GetId(), GetId(), local_sequence_num_, local_message_);
 }
 
-std::vector<PBFTMessage> PBFTGoodNode::ReceivePrePrepareMsg() {
+std::vector<PBFTMessage> PBFTWrongNode::ReceivePrePrepareMsg() {
   std::unique_lock lk(queue_lock_);
   std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
   queue_cond_var_.wait(lk, [&]{return AllPrePrepareMsgExist(start);});
@@ -326,7 +313,7 @@ std::vector<PBFTMessage> PBFTGoodNode::ReceivePrePrepareMsg() {
   return res;
 }
 
-void PBFTGoodNode::SetPrePrepareMsgState(const PBFTMessage& msg) {
+void PBFTWrongNode::SetPrePrepareMsgState(const PBFTMessage& msg) {
   local_message_ = msg.data_;
   local_view_number_ = msg.view_number_;
   local_sequence_num_ = msg.sequence_number_;
@@ -335,11 +322,11 @@ void PBFTGoodNode::SetPrePrepareMsgState(const PBFTMessage& msg) {
 /** ***********************
  * PREPARE STAGE
  **************************/
-PBFTMessage PBFTGoodNode::GeneratePrepareMsg() {
+PBFTMessage PBFTWrongNode::GeneratePrepareMsg() {
   return PBFTMessage(PBFTMessageType::PREPARE, GetId(), local_view_number_, local_sequence_num_, local_message_);
 }
 
-std::vector<PBFTMessage> PBFTGoodNode::ReceivePrepareMsg()  {
+std::vector<PBFTMessage> PBFTWrongNode::ReceivePrepareMsg()  {
   std::unique_lock lk(queue_lock_);
   std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
   queue_cond_var_.wait(lk, [&]{return AllPrepareMsgExist(start);});
@@ -366,11 +353,11 @@ std::vector<PBFTMessage> PBFTGoodNode::ReceivePrepareMsg()  {
 /** ***********************
  * COMMIT STAGE
  **************************/
-PBFTMessage PBFTGoodNode::GenerateCommitMsg()  {
+PBFTMessage PBFTWrongNode::GenerateCommitMsg()  {
   return PBFTMessage(PBFTMessageType::COMMIT, GetId(), local_view_number_, local_sequence_num_, local_message_);
 }
 
-std::vector<PBFTMessage> PBFTGoodNode::ReceiveCommitMsg()  {
+std::vector<PBFTMessage> PBFTWrongNode::ReceiveCommitMsg()  {
   std::unique_lock lk(queue_lock_);
   std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
   queue_cond_var_.wait(lk, [&]{return AllCommitMsgExist(start);});
@@ -398,7 +385,7 @@ std::vector<PBFTMessage> PBFTGoodNode::ReceiveCommitMsg()  {
 /** ***********************
  * REPLY STAGE
  **************************/
-std::string PBFTGoodNode::ReplyRequest()  {
+std::string PBFTWrongNode::ReplyRequest()  {
   valid_sequence_num_ = local_sequence_num_;
 
   ClientReq req = process_client_req(local_message_);
@@ -413,12 +400,12 @@ std::string PBFTGoodNode::ReplyRequest()  {
 /** ***********************
  * VIEW CHANGE/NEW VIEW STAGE
  **************************/
-PBFTMessage PBFTGoodNode::GenerateViewChangeMsg() {
+PBFTMessage PBFTWrongNode::GenerateViewChangeMsg() {
   uint64_t total_nodes = (3 * f_) + 1;
   return PBFTMessage(PBFTMessageType::VIEWCHANGE, id_, (view_number_ + 1) % total_nodes, valid_sequence_num_, "");
 }
 
-std::vector<PBFTMessage> PBFTGoodNode::ReceiveViewChangeMsg() {
+std::vector<PBFTMessage> PBFTWrongNode::ReceiveViewChangeMsg() {
   std::unique_lock lk(queue_lock_);
   std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
   queue_cond_var_.wait(lk, [&]{return AllViewChangeMsgExist(start);});
@@ -443,7 +430,7 @@ std::vector<PBFTMessage> PBFTGoodNode::ReceiveViewChangeMsg() {
   return res;
 }
 
-PBFTMessage PBFTGoodNode::GenerateNewViewMsg() {
+PBFTMessage PBFTWrongNode::GenerateNewViewMsg() {
   PBFTMessage msg = PBFTMessage(PBFTMessageType::NEWVIEW, id_, id_, valid_sequence_num_, "");
   std::vector<std::string> msgs_as_str;
   for (auto & vc_msg : view_change_msgs_) {
@@ -452,7 +439,7 @@ PBFTMessage PBFTGoodNode::GenerateNewViewMsg() {
   return msg;
 }
 
-std::vector<PBFTMessage> PBFTGoodNode::ReceiveNewViewMsg() {
+std::vector<PBFTMessage> PBFTWrongNode::ReceiveNewViewMsg() {
   std::unique_lock lk(queue_lock_);
   std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
   queue_cond_var_.wait(lk, [&]{return AllNewViewMsgExist(start);});
@@ -473,7 +460,7 @@ std::vector<PBFTMessage> PBFTGoodNode::ReceiveNewViewMsg() {
   return res;
 }
 
-void PBFTGoodNode::ClearQueue(uint64_t new_view_num) {
+void PBFTWrongNode::ClearQueue(uint64_t new_view_num) {
   std::unique_lock lk(queue_lock_);
   queue_.erase(std::remove_if(queue_.begin(), 
                               queue_.end(),

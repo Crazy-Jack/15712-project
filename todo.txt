@@ -1,6 +1,5 @@
 abi todo
 1. write wrong node
-2. view change 
 3. test
 4. write non responsive node
 5. test

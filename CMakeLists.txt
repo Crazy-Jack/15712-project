@@ -12,6 +12,7 @@ add_executable(bft-sim
   src/pbft_service.cpp
   src/pbft_node.cpp
   src/pbft_good_node.cpp
+  src/pbft_wrong_node.cpp
   src/lib.cpp)
   
 target_include_directories(bft-sim PUBLIC ${CMAKE_SOURCE_DIR}/src/include)

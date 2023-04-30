@@ -43,6 +43,7 @@ enum PBFTMessageType : char {
 /** Helper functions */
 std::string PBFTMessageTypeToStr(PBFTMessageType type);
 PBFTMessageType StrToPBFTMessageType(const std::string& str);
+ClientReq process_client_req(const std::string& command);
 
 struct PBFTMessage {
   PBFTMessageType type_;
