@@ -100,7 +100,7 @@ class BroadcastNode:
                                 sending_sigs.append(s)
                         sending_sigs = sending_sigs[:2 * self.f + 1]
                         self.socks[j].sendall(to_json({'epoch': self.epoch, 'm': m, 'sigs': sending_sigs}))
-                self.shutdown()
+                self.shutdown(m)
 
         elif len(sigs) == 1 and self.round == 1:
             self.log(f'Leader from {ind}')
@@ -150,8 +150,12 @@ class BroadcastNode:
             
 
 
-    def shutdown(self):
+    def shutdown(self, m):
         self.log("SHUTDOWN")
+        if self.i == 1:
+            with open("myfile.txt", "a") as f:
+                f.write(m + "\n")
+        
         if self.timer_thread is not None:
             self.timer_thread.cancel()
         for thread in self.threads:

@@ -27,6 +27,7 @@ class OSMRNode:
         self.queue = []
         self.pointer = 0
         self.threads = []
+        self.agreed_vals = []
 
         self.bbs = []
         self.epoch = -1
@@ -47,6 +48,7 @@ class OSMRNode:
     def schedule_advance(self):
         self.epoch += 1
         if self.pointer < len(self.queue):
+            print("-------------------\n HAHA\n ------------")
             m = self.queue[self.pointer]
             self.pointer += 1
         else:
@@ -92,18 +94,17 @@ class OSMRNode:
         while True:
             client, address = sock.accept()
             client.settimeout(90)
-            self.log(f"Starting client {address}")
+            self.log(f"Starting actual client {address}")
             thread = Thread(target = self.react_to_requests, args = (client, address))
             self.threads.append(thread)
             thread.start()
 
     def react_to_requests(self, client, address):
-        size = 4096
+        size = 2048
         while True:
             try:
                 data = client.recv(size)
                 data = json.loads(data)
-                print(data)
                 self.queue.append(data['m'])
                 
                 '''
@@ -138,7 +139,7 @@ class OSMRNode:
     
     def react_to_messages(self, client, address):
         # TODO: change this so we can get arbitrary size
-        size = 4096
+        size = 2048
         ind = -1
         while True:
             try:
