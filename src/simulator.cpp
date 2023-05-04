@@ -2,6 +2,8 @@
 #include "service.h"
 #include "non_replicated_service.hpp"
 #include "pbft_service.h"
+#include "bb_service.h"
+
 
 #include <fstream>
 #include <iostream>
@@ -57,6 +59,8 @@ int main(int argc, char** argv) {
     service = std::make_shared<NonReplicatedService>();
   } else if (mode == 1) {
     service = std::make_shared<PBFTService>(faulty_nodes, byzantine_mode, true);
+  } else if (mode == 2) {
+    service = std::make_shared<BBService>(faulty_nodes, byzantine_mode, true);
   }
 
   // Parse the tracefile. 
