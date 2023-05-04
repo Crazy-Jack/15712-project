@@ -1,7 +1,9 @@
 abi todo
-1. graphs
-2. slides
-3. report
+1. pbft service
+2. document code
+
+things to do left for report: 
+1. 
 
 tianqin todo
 1. alberts algo

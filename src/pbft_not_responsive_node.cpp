@@ -1,7 +1,8 @@
 /**
  * @file pbft_not_responsive_node.cpp
  * @author Abigale Kim
- * @brief Implementation of not responsive node.
+ * @brief Implementation of not responsive node. It should just 
+ * return and not send any messages.
  * 
  */
 

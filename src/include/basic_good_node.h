@@ -1,7 +1,8 @@
 /**
  * @file basic_good_node.h
  * @author Abigale Kim (abigalek)
- * @brief basic good node
+ * @brief Basic good node implementation. Not used in the simulator. Here as an example
+ * on how to implement a basic service.
  * @version 0.1
  * @date 2023-04-20
  * 

@@ -1,7 +1,9 @@
 /**
  * @file non_replicated_service.hpp
  * @author Abigale Kim (abigalek)
- * @brief Basic, unreplicated service.
+ * @brief Basic, unreplicated service. Not multithreaded.
+ * This exists to compare the performance of our service/PBFT to an
+ * unreplicated service.
  */
 
 #include "service.h"

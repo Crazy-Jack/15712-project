@@ -1,9 +1,8 @@
 /**
  * @file node.h
- * @author Abi Kim (abigalek@)
- * @brief defines server nodes. virtual class.
- * 
- * @copyright Copyright (c) 2023
+ * @author Abigale Kim (abigalek)
+ * @brief Virtual class that defines server nodes. Only really includes
+ * basic info.
  * 
  */
 

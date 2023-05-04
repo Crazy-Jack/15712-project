@@ -1,7 +1,8 @@
 /**
  * @file pbft_node.cpp
  * @author Abigale Kim (abigalek)
- * @brief stuff
+ * @brief Additional PBFT-specific helper methods, along
+ * with implementations of methods defined for the PBFTNode class.
  * 
  */
 
