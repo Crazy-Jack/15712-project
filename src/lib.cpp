@@ -26,3 +26,17 @@ std::string sha256(const std::string& str) {
 
   return ss.str();
 }
+
+uint8_t lsb_sha256(const std::string& str) {
+  std::string sha256_str = sha256(str);
+  std::string last_char = sha256_str.substr(sha256_str.length() - 1, 1);
+  unsigned int x;   
+  std::stringstream ss;
+  ss << std::hex << last_char;
+  ss >> x;
+  return static_cast<uint8_t>(x) & 0x1;
+}
+
+bool str_starts_with(const std::string &str, const std::string &prefix) {
+    return str.size() >= prefix.size() && str.compare(0, prefix.size(), prefix) == 0;
+}

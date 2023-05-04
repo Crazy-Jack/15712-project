@@ -193,16 +193,17 @@ BBMessage BBGoodNode::GeneratePrepareMsg(bool BOT) {
 // if the neighbor ever outputs, it stop sending them messages
 
 // phase 0 execution
-void BBGoodNode::CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command) {
+bool BBGoodNode::CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command) {
     // return true if there is an output, otherwise return false
     phase_k_ = 0;
     // round 0
+    BBMessage prepare_msg;
     if (leader_) {
         // leader send the message <m>{w} to all nodes
         // Has client request (from simulation)
         ReceiveRequestMsg(command);
 
-        BBMessage prepare_msg = GenerateProposalMessage();
+        prepare_msg = GenerateProposalMessage();
 
         // send message to all nodes excepts the leader
         for (uint64_t j = 0; j < nodes.size(); ++j) {
@@ -231,7 +232,7 @@ void BBGoodNode::CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& n
 
         // round 1: (for non leader node only)
         // prepare message <m>{w, alpha} to be sent
-        BBMessage prepare_msg = GeneratePrepareMsg(false);
+        prepare_msg = GeneratePrepareMsg(false);
 
         // send message to all nodes excepts the alpha
         for (uint64_t j = 0; j < nodes.size(); ++j) {
@@ -322,12 +323,12 @@ bool BBGoodNode::CommandValidationPhaseK_R1(std::vector<std::shared_ptr<BBNode>>
     // local variable I (could be ⊥) to every β ∈ P
     // (including the case β = α). 
     
-    BBMessage boardcast_msg = GeneratePrepareMsg(local_data_bot_);
+    BBMessage broadcast_msg = GeneratePrepareMsg(local_data_bot_);
 
     // send I * to everyone, broadcast
     for (uint64_t j = 0; j < nodes.size(); ++j) {
       if (!local_node_output_status_[j]) {
-        nodes[j]->SendMessage(boardcast_msg);
+        nodes[j]->SendMessage(broadcast_msg);
       }
     }
 
@@ -343,8 +344,8 @@ bool BBGoodNode::CommandValidationPhaseK_R1(std::vector<std::shared_ptr<BBNode>>
         // checks signatures (hash, here), replica number = current view, 2f prepare
         // messages match w the pre-prepare message
         if (msg.type_ == BBMessageType::BB_PREPARE
-        && msg.data_hash_ == prepare_msg.data_hash_
-        && msg.leader_id_ == prepare_msg.leader_id_) {
+        && msg.data_hash_ == broadcast_msg.data_hash_
+        && msg.leader_id_ == broadcast_msg.leader_id_) {
 
           if (msg.BOT) {
             valid_prepare_msg_bot_count += 1;
@@ -390,12 +391,12 @@ bool BBGoodNode::CommandValidationPhaseK_R1(std::vector<std::shared_ptr<BBNode>>
 
 
 bool BBGoodNode::CommandValidationPhaseK_R2(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command) {
-  BBMessage boardcast_msg = GeneratePrepareMsg(local_data_bot_);
+  BBMessage broadcast_msg = GeneratePrepareMsg(local_data_bot_);
 
   // send I * to everyone, broadcast
   for (uint64_t j = 0; j < nodes.size(); ++j) {
     if (!local_node_output_status_[j]) {
-      nodes[j]->SendMessage(boardcast_msg);
+      nodes[j]->SendMessage(broadcast_msg);
     }
   }
 
@@ -411,8 +412,8 @@ bool BBGoodNode::CommandValidationPhaseK_R2(std::vector<std::shared_ptr<BBNode>>
       // checks signatures (hash, here), replica number = current view, 2f prepare
       // messages match w the pre-prepare message
       if (msg.type_ == BBMessageType::BB_PREPARE
-      && msg.data_hash_ == prepare_msg.data_hash_
-      && msg.leader_id_ == prepare_msg.leader_id_) {
+      && msg.data_hash_ == broadcast_msg.data_hash_
+      && msg.leader_id_ == broadcast_msg.leader_id_) {
 
         if (msg.BOT) {
           valid_prepare_msg_bot_count += 1;
@@ -456,12 +457,12 @@ bool BBGoodNode::CommandValidationPhaseK_R2(std::vector<std::shared_ptr<BBNode>>
 
 bool BBGoodNode::CommandValidationPhaseK_R3(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command) {
   // TODO: 
-  BBMessage boardcast_msg = GeneratePrepareMsg(local_data_bot_);
+  BBMessage broadcast_msg = GeneratePrepareMsg(local_data_bot_);
 
   // send I * to everyone, broadcast
   for (uint64_t j = 0; j < nodes.size(); ++j) {
     if (!local_node_output_status_[j]) {
-      nodes[j]->SendMessage(boardcast_msg);
+      nodes[j]->SendMessage(broadcast_msg);
     }
   }
 
@@ -476,12 +477,12 @@ bool BBGoodNode::CommandValidationPhaseK_R3(std::vector<std::shared_ptr<BBNode>>
   for (const auto& msg : prepare_msgs) {
     
     if (msg.type_ == BBMessageType::BB_PREPARE
-      && msg.data_hash_ == prepare_msg.data_hash_
-      && msg.leader_id_ == prepare_msg.leader_id_) {
+      && msg.data_hash_ == broadcast_msg.data_hash_
+      && msg.leader_id_ == broadcast_msg.leader_id_) {
         // get min k 
 
         if (msg.phase_k_ < min_k) {
-          min_k = msg.phase_k_
+          min_k = msg.phase_k_;
         }
         if (msg.BOT) {
           valid_prepare_msg_bot_count += 1;
@@ -503,7 +504,7 @@ bool BBGoodNode::CommandValidationPhaseK_R3(std::vector<std::shared_ptr<BBNode>>
       
     } else {
       // b := lsb(minα H(⟨k⟩{α}))
-      b = sha256(std::to_string(min_k)) & 1;
+      uint8_t b = lsb_sha256(std::to_string(min_k));
       if (!b) {
         SetPrepareMsg(botmessage, true);
       } else {

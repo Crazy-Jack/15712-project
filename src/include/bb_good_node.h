@@ -56,7 +56,7 @@ class BBGoodNode : public BBNode {
     BBMessage GenerateIstarMessage(bool BOT);
     BBMessage GeneratePrepareMsg(bool BOT);
 
-    void CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
+    bool CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
     void ReceiveStarMessages(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
     bool CommandValidationPhaseK_R1(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
     bool CommandValidationPhaseK_R2(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);

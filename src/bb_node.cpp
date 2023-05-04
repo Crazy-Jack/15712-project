@@ -48,10 +48,6 @@ void BBNode::SendNotifyAll() {
   queue_cond_var_.notify_all();
 }
 
-bool str_starts_with(const std::string &str, const std::string &prefix) {
-    return str.size() >= prefix.size() && str.compare(0, prefix.size(), prefix) == 0;
-}
-
 BBMessage StrToBBMessage(std::string str) {
   BBMessage bb_message;
   std::stringstream input_stream(str);
