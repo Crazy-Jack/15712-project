@@ -25,7 +25,6 @@ class BasicGoodService : public Service {
     }
 
     void ProcessCommand(const std::string& command) override;
-    // 
 
   private:
     std::vector<std::shared_ptr<BasicGoodNode>> nodes_;
