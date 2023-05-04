@@ -1,7 +1,10 @@
 abi todo
-1. graphs
-2. slides
-3. report
+1. update readme
+2. handle tianqins pr
+3. write PBFT service section
+
+things to do left for report: 
+1. 
 
 tianqin todo
 1. alberts algo

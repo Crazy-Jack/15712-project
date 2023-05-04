@@ -1,7 +1,7 @@
 /**
  * @file service.h
  * @author Abigale Kim
- * @brief service virtual class
+ * @brief Service virtual class that exposes the ProcessCommand method.
  */
 
 #ifndef __SERVICE_H__

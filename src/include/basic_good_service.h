@@ -1,3 +1,10 @@
+/**
+ * @file basic_good_service.h
+ * @author Abigale Kim (abigalek)
+ * @brief Basic good service implementation. Not used in the simulator. Here as an example
+ * on how to implement a basic service.
+ */
+
 #ifndef __BASIC_GOOD_SERVICE_H__
 #define __BASIC_GOOD_SERVICE_H__
 

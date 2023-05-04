@@ -8,7 +8,6 @@
 # -m mode, -m pbft will run pbft, -m bbalgo will run our algorithm, -m nrep will run not-replicated service only
 # This program will run non-replicated service and your own service, and compare the
 # performance of it on the tracefile
-# TODO: graphing?
 
 import argparse
 import os

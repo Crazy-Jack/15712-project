@@ -2,9 +2,6 @@
  * @file pbft_good_node.cpp
  * @author Abigale Kim (abigalek)
  * @brief Implementation of good nodes for PBFT protocol.
- * 
- * @copyright Copyright (c) 2023
- * 
  */
 
 #include "pbft_node.h"
@@ -22,8 +19,6 @@
 /** ***********************
  * MISC. HELPER FUNCTIONS
  **************************/
-
-/** Checks for the existence of one pre-prepare message. */
 bool PBFTGoodNode::AllPrePrepareMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   // Assumes you have the queue lock.
   for (const auto& msg : queue_) {
@@ -36,7 +31,6 @@ bool PBFTGoodNode::AllPrePrepareMsgExist(std::chrono::time_point<std::chrono::st
   return milliseconds > timeout;
 }
 
-/** Checks for the existence of 3f prepare messages. */
 bool PBFTGoodNode::AllPrepareMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   uint64_t count = 0;
   for (const auto& msg : queue_) {
@@ -49,7 +43,6 @@ bool PBFTGoodNode::AllPrepareMsgExist(std::chrono::time_point<std::chrono::stead
   return count == f_ * 3 || milliseconds > timeout;
 }
 
-/** Checks for the existence of 3f commit messages. */
 bool PBFTGoodNode::AllCommitMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   uint64_t count = 0;
   for (const auto& msg : queue_) {
@@ -62,7 +55,6 @@ bool PBFTGoodNode::AllCommitMsgExist(std::chrono::time_point<std::chrono::steady
   return count == f_ * 3 || milliseconds > timeout;
 }
 
-/** Checks for the existence of 2f view change messages. */
 bool PBFTGoodNode::AllViewChangeMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   uint64_t count = 0;
   for (const auto& msg : queue_) {
@@ -75,7 +67,6 @@ bool PBFTGoodNode::AllViewChangeMsgExist(std::chrono::time_point<std::chrono::st
   return count == f_ * 2 || milliseconds > timeout;
 }
 
-/** Checks for the existence of one new view message. */
 bool PBFTGoodNode::AllNewViewMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   // Assumes you have the queue lock.
   for (const auto& msg : queue_) {
@@ -91,7 +82,7 @@ bool PBFTGoodNode::AllNewViewMsgExist(std::chrono::time_point<std::chrono::stead
 bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nodes, std::string command) {
   // Pre-prepare stage
   if (leader_) {
-    // Has client request (from simulation)
+    // Proccesses client request (from service)
     ReceiveRequestMsg(command);
 
     PBFTMessage pre_prepare_msg = GeneratePrePrepareMsg();
@@ -119,7 +110,7 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
     SetPrePrepareMsgState(right_preprepare_msg);
   }
 
-  // Prepare stage
+  // Sends out prepare messages.
   PBFTMessage prepare_msg = GeneratePrepareMsg();
   for (uint64_t j = 0; j < nodes.size(); ++j) {
     if (j == GetId()) {
@@ -132,9 +123,9 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
   std::vector<PBFTMessage> prepare_msgs = ReceivePrepareMsg();
   uint64_t valid_prepare_msg_count = 0;
   for (const auto& msg : prepare_msgs) {
-    // view number, sequence number, hash
-    // checks signatures (hash, here), replica number = current view, 2f prepare
-    // messages match w the pre-prepare message
+    // Checks signatures (in here, the hashes),
+    // replica number = current view, and that the 
+    // sequence numbers match up
     if (msg.type_ == PBFTMessageType::PREPARE
      && msg.data_hash_ == prepare_msg.data_hash_
      && msg.view_number_ == prepare_msg.view_number_
@@ -143,6 +134,7 @@ bool PBFTGoodNode::CommandValidation(std::vector<std::shared_ptr<PBFTNode>>& nod
     }
   }
 
+  // Ensures there are 2f + 1 valid prepare messages.
   if (valid_prepare_msg_count < f_ * 2) {
     return false;
   }
