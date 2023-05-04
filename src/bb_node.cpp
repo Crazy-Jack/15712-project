@@ -1,43 +1,26 @@
-
-
-
-#include "bb_node.h"
+/**
+ * @file bb_node.cpp
+ * @author Tianqin Li (tianqinl) and Abigale Kim (abigalek)
+ * @brief TODO: fill in
+ */
 #include "lib.h"
+#include "bb_node.h"
 
 #include <sstream>
 #include <iterator>
 
-
-
-
-ClientReq process_client_req(const std::string& command) {
-  ClientReqType type;
-  int num = 0;
-  if (command.compare("g") == 0) {
-    type = ClientReqType::BB_GET;
-  } else {
-    std::stringstream ss(command);  
-    std::istream_iterator<std::string> begin(ss);
-    std::istream_iterator<std::string> end;
-    std::vector<std::string> commands(begin, end);
-    type = ClientReqType::BB_SET;
-    num = std::stoi(commands[1]);
-  }
-  return ClientReq(type, num);
-}
-
 std::string BBMessageTypeToStr(BBMessageType type) {
   switch(type) {
-    case BBMessageType::REQUEST: {
-      return "REQUEST";
+    case BBMessageType::BB_REQUEST: {
+      return "BB_REQUEST";
     }
-    case BBMessageType::PREPREPARE: {
-      return "PREPREPARE";
+    case BBMessageType::BB_PREPREPARE: {
+      return "BB_PREPREPARE";
     }
-    case BBMessageType::PREPARE: {
+    case BBMessageType::BB_PREPARE: {
       return "PREPARE";
     }
-    case BBMessageType::OUTPUT: {
+    case BBMessageType::BB_OUTPUT: {
       return "OUTPUT";
     }
   }
@@ -45,17 +28,17 @@ std::string BBMessageTypeToStr(BBMessageType type) {
 }
 
 BBMessageType StrToBBMessageType(const std::string& str) {
-  if (str == "REQUEST") {
-    return BBMessageType::REQUEST;
+  if (str == "BB_REQUEST") {
+    return BBMessageType::BB_REQUEST;
   }
-  if (str == "PREPREPARE") {
-    return BBMessageType::PREPREPARE;
+  if (str == "BB_PREPREPARE") {
+    return BBMessageType::BB_PREPREPARE;
   }
   if (str == "PREPARE") {
-    return BBMessageType::PREPARE;
+    return BBMessageType::BB_PREPARE;
   }
   if (str == "OUTPUT") {
-    return BBMessageType::OUTPUT;
+    return BBMessageType::BB_OUTPUT;
   }
   
   throw std::runtime_error("Invalid argument: " + str);
@@ -101,20 +84,18 @@ void BBNode::SendMessage(BBMessage message) {
   queue_cond_var_.notify_all();
 }
 
-
-
-ClientReq process_client_req(const std::string& command) {
-  ClientReqType type;
+BBClientReq bb_process_client_req(const std::string& command) {
+  BBClientReqType type;
   int num = 0;
   if (command.compare("g") == 0) {
-    type = ClientReqType::BB_GET;
+    type = BBClientReqType::BB_GET;
   } else {
     std::stringstream ss(command);  
     std::istream_iterator<std::string> begin(ss);
     std::istream_iterator<std::string> end;
     std::vector<std::string> commands(begin, end);
-    type = ClientReqType::BB_SET;
+    type = BBClientReqType::BB_SET;
     num = std::stoi(commands[1]);
   }
-  return ClientReq(type, num);
+  return BBClientReq(type, num);
 }

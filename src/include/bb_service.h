@@ -4,7 +4,6 @@
 #include "service.h"
 #include "bb_node.h"
 #include "bb_good_node.h"
-#include "bb_wrong_node.h"
 #include "bb_not_responsive_node.h"
 
 #include <memory>
@@ -35,17 +34,6 @@ class BBService : public Service {
         int timestamp = 0;
         for (uint64_t i = 0; i < num_faulty_nodes; ++i) {
           nodes_.emplace_back(std::make_shared<BBNotResponsiveNode>(reliable, 0, total_nodes, primary_node_, num_faulty_nodes));
-          timestamp += 1;
-        }
-
-        for (uint64_t i = num_faulty_nodes; i < total_nodes; ++i) {
-          nodes_.emplace_back(std::make_shared<BBGoodNode>(reliable, timestamp, total_nodes, primary_node_, num_faulty_nodes));
-          timestamp += 1;
-        }
-      } else if (byzantine_mode == 2) {
-        int timestamp = 0;
-        for (uint64_t i = 0; i < num_faulty_nodes; ++i) {
-          nodes_.emplace_back(std::make_shared<BBWrongNode>(reliable, 0, total_nodes, primary_node_, num_faulty_nodes));
           timestamp += 1;
         }
 
