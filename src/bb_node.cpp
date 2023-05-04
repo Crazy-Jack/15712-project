@@ -101,8 +101,6 @@ void BBNode::SendMessage(BBMessage message) {
   queue_cond_var_.notify_all();
 }
 
-
-
 ClientReq process_client_req(const std::string& command) {
   ClientReqType type;
   int num = 0;

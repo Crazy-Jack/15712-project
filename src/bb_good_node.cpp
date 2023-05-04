@@ -160,8 +160,7 @@ void BBGoodNode::SetStarMsg(const BBMessage& msg) {
   if (msg.BOT) {
     local_node_output_bot_[msg.sender_] = true;
     local_data_bot_ = true;
-  }
-  
+  } 
 
   // TODO: Should you log the SubsetSuccessNodesIDs? not right now
 }
@@ -311,12 +310,6 @@ void BBGoodNode::ReceiveStarMessages(std::vector<std::shared_ptr<BBNode>>& nodes
     }
 
 }
-
-
-
-
-
-
 
 
 bool BBGoodNode::CommandValidationPhaseK_R1(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command) {
