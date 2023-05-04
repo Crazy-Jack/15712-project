@@ -20,15 +20,11 @@
 #include <unordered_map>
 #include <vector>
 
-
-
-
-
 /** Checks for the existence of one pre-prepare message. */
 bool BBGoodNode::AllPrePrepareMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   // Assumes you have the queue lock.
   for (const auto& msg : queue_) {
-    if (msg.type_ == BBMessageType::PREPREPARE) {
+    if (msg.type_ == BBMessageType::BB_PREPREPARE) {
       return true;
     }
   }
@@ -42,7 +38,7 @@ bool BBGoodNode::AllPrePrepareMsgExist(std::chrono::time_point<std::chrono::stea
 bool BBGoodNode::AllPrepareMsgExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   uint64_t count = 0;
   for (const auto& msg : queue_) {
-    if (msg.type_ == BBMessageType::PREPARE) {
+    if (msg.type_ == BBMessageType::BB_PREPARE) {
       count += 1;
     }
   }
@@ -55,7 +51,7 @@ bool BBGoodNode::AllPrepareMsgExist(std::chrono::time_point<std::chrono::steady_
 /** Checks for the existence of star messages. */
 bool BBGoodNode::CheckIstarExist(std::chrono::time_point<std::chrono::steady_clock> &start) {
   for (const auto& msg : queue_) {
-    if (msg.type_ == BBMessageType::Star) {
+    if (msg.type_ == BBMessageType::BB_OUTPUT) {
       return true;
     }
   }
@@ -74,14 +70,14 @@ std::vector<BBMessage> BBGoodNode::ReceivePrePrepareMsg() {
   // adding the results of the preprepare messages
   std::vector<BBMessage> res;
   for (auto &elem : queue_) {
-    if (elem.type_ == BBMessageType::PREPREPARE) {
+    if (elem.type_ == BBMessageType::BB_PREPREPARE) {
       res.push_back(elem);
     }
   }
 
   queue_.erase(std::remove_if(queue_.begin(), 
                               queue_.end(),
-                              [](BBMessage &elem) { return elem.type_ == BBMessageType::PREPREPARE; }),
+                              [](BBMessage &elem) { return elem.type_ == BBMessageType::BB_PREPREPARE; }),
                queue_.end());
 
   lk.unlock();
@@ -99,14 +95,14 @@ std::vector<BBMessage> BBGoodNode::ReceivePrepareMsg()  {
   // We collect pre-prepare messages at any stage because it indicates a faulty leader node/another
   // node is attempting to masquerade as leader.
   for (auto &elem : queue_) {
-    if (elem.type_ == BBMessageType::PREPREPARE || elem.type_ == BBMessageType::PREPARE) {
+    if (elem.type_ == BBMessageType::BB_PREPREPARE || elem.type_ == BBMessageType::BB_PREPARE) {
       res.push_back(elem);
     }
   }
 
   queue_.erase(std::remove_if(queue_.begin(), 
                               queue_.end(),
-                              [](PBFTMessage &elem) { return elem.type_ == BBMessageType::PREPREPARE || elem.type_ == BBMessageType::PREPARE; }),
+                              [](BBMessage &elem) { return elem.type_ == BBMessageType::BB_PREPREPARE || elem.type_ == BBMessageType::BB_PREPARE; }),
                queue_.end());
 
   lk.unlock();
@@ -124,14 +120,14 @@ std::vector<BBMessage> BBGoodNode::ReceiveIstarMsg()  {
   // We collect pre-prepare messages at any stage because it indicates a faulty leader node/another
   // node is attempting to masquerade as leader.
   for (auto &elem : queue_) {
-    if (elem.type_ == BBMessageType::PREPREPARE || elem.type_ == BBMessageType::OUTPUT) {
+    if (elem.type_ == BBMessageType::BB_PREPREPARE || elem.type_ == BBMessageType::BB_OUTPUT) {
       res.push_back(elem);
     }
   }
 
   queue_.erase(std::remove_if(queue_.begin(), 
                               queue_.end(),
-                              [](PBFTMessage &elem) { return elem.type_ == BBMessageType::PREPREPARE || elem.type_ == BBMessageType::OUTPUT; }),
+                              [](BBMessage &elem) { return elem.type_ == BBMessageType::BB_PREPREPARE || elem.type_ == BBMessageType::BB_OUTPUT; }),
                queue_.end());
 
   lk.unlock();
@@ -140,7 +136,7 @@ std::vector<BBMessage> BBGoodNode::ReceiveIstarMsg()  {
 
 void BBGoodNode::SetPrePrepareMsgState(const BBMessage& msg) {
   local_state_data_ = msg.data_; // PrePrepare directly overwrite local_message_ from the leader 
-  local_lead_id_ = msg.lead_id_;
+  local_lead_id_ = msg.leader_id_;
 }
 
 
@@ -171,8 +167,8 @@ BBMessage BBGoodNode::GenerateProposalMessage() {
     // TODO: generate proposal messages from leader
     // type: BBMessage::PREPREPAPARE 
     //   local_view_number_ = GetId();
-    //   return PBFTMessage(PBFTMessageType::PREPREPARE, GetId(), GetId(), local_sequence_num_, local_message_);
-  return BBMessage(BBMessageType::PREPREPARE, GetId(), GetId(), local_state_data_, false, phase_k_);
+    //   return BBMessage(BBMessageType::PREPREPARE, GetId(), GetId(), local_sequence_num_, local_message_);
+  return BBMessage(BBMessageType::BB_PREPREPARE, GetId(), GetId(), local_state_data_, false, phase_k_);
 
 }
 
@@ -180,13 +176,13 @@ BBMessage BBGoodNode::GenerateProposalMessage() {
 
 BBMessage BBGoodNode::GenerateIstarMessage(bool BOT) {
     // TODO: generate I* messages
-    return BBMessage(BBMessageType::OUTPUT, GetId(), local_lead_id_, local_state_data_, BOT, phase_k_);
+    return BBMessage(BBMessageType::BB_OUTPUT, GetId(), local_lead_id_, local_state_data_, BOT, phase_k_);
 }
 
 
 
 BBMessage BBGoodNode::GeneratePrepareMsg(bool BOT) {
-    return BBMessage(BBMessageType::PREPARE, GetId(), local_lead_id_, local_state_data_, BOT, phase_k_);
+    return BBMessage(BBMessageType::BB_PREPARE, GetId(), local_lead_id_, local_state_data_, BOT, phase_k_);
 }
 
 
@@ -196,16 +192,17 @@ BBMessage BBGoodNode::GeneratePrepareMsg(bool BOT) {
 // if the neighbor ever outputs, it stop sending them messages
 
 // phase 0 execution
-void BBGoodNode::CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command) {
+bool BBGoodNode::CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command) {
     // return true if there is an output, otherwise return false
     phase_k_ = 0;
     // round 0
+    BBMessage prepare_msg;
     if (leader_) {
         // leader send the message <m>{w} to all nodes
         // Has client request (from simulation)
         ReceiveRequestMsg(command);
 
-        BBMessage prepare_msg = GenerateProposalMessage();
+        prepare_msg = GenerateProposalMessage();
 
         // send message to all nodes excepts the leader
         for (uint64_t j = 0; j < nodes.size(); ++j) {
@@ -222,7 +219,7 @@ void BBGoodNode::CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& n
         // verify the correctness of the preprepare
         BBMessage right_preprepare_msg;
         for (auto& msg : pre_prepare_msgs) {
-            if (msg.type_ == BBMessageType::PREPREPARE
+            if (msg.type_ == BBMessageType::BB_PREPREPARE
             && msg.data_hash_ == sha256(msg.data_)
             && msg.sender_ == msg.leader_id_) {
                 right_preprepare_msg = msg;
@@ -234,7 +231,7 @@ void BBGoodNode::CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& n
 
         // round 1: (for non leader node only)
         // prepare message <m>{w, alpha} to be sent
-        BBMessage prepare_msg = GeneratePrepareMsg(false);
+        prepare_msg = GeneratePrepareMsg(false);
 
         // send message to all nodes excepts the alpha
         for (uint64_t j = 0; j < nodes.size(); ++j) {
@@ -261,9 +258,9 @@ void BBGoodNode::CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& n
         // view number, sequence number, hash
         // checks signatures (hash, here), replica number = current view, 2f prepare
         // messages match w the pre-prepare message
-        if (msg.type_ == BBMessageType::PREPARE
+        if (msg.type_ == BBMessageType::BB_PREPARE
         && msg.data_hash_ == prepare_msg.data_hash_
-        && msg.lead_id_ == prepare_msg.lead_id_) {
+        && msg.leader_id_ == prepare_msg.leader_id_) {
             valid_prepare_msg_count += 1;
             SubsetSuccessNodesIDs.push_back(msg.sender_);
         }
@@ -302,7 +299,7 @@ void BBGoodNode::ReceiveStarMessages(std::vector<std::shared_ptr<BBNode>>& nodes
         // view number, sequence number, hash
         // checks signatures (hash, here), replica number = current view, 2f prepare
         // messages match w the pre-prepare message
-        if (msg.type_ == BBMessageType::OUTPUT
+        if (msg.type_ == BBMessageType::BB_OUTPUT
         ) {
             // store J to I
             SetStarMsg(msg);
@@ -319,12 +316,12 @@ bool BBGoodNode::CommandValidationPhaseK_R1(std::vector<std::shared_ptr<BBNode>>
     // local variable I (could be ⊥) to every β ∈ P
     // (including the case β = α). 
     
-    BBMessage boardcast_msg = GeneratePrepareMsg(local_data_bot_);
+    BBMessage broadcast_msg = GeneratePrepareMsg(local_data_bot_);
 
     // send I * to everyone, broadcast
     for (uint64_t j = 0; j < nodes.size(); ++j) {
       if (!local_node_output_status_[j]) {
-        nodes[j]->SendMessage(boardcast_msg);
+        nodes[j]->SendMessage(broadcast_msg);
       }
     }
 
@@ -332,23 +329,23 @@ bool BBGoodNode::CommandValidationPhaseK_R1(std::vector<std::shared_ptr<BBNode>>
     uint64_t valid_prepare_msg_bot_count = 0;
     uint64_t valid_prepare_msg_non_bot_count = 0;
     BBMessage botmessage;
-    BBMessage nonbotmessgae;
+    BBMessage nonbotmessage;
 
     // TODO: distinct number needs to be checked here for preventing bad nodes send fake data multiple times
     for (const auto& msg : prepare_msgs) {
         // view number, sequence number, hash
         // checks signatures (hash, here), replica number = current view, 2f prepare
         // messages match w the pre-prepare message
-        if (msg.type_ == BBMessageType::PREPARE
-        && msg.data_hash_ == prepare_msg.data_hash_
-        && msg.lead_id_ == prepare_msg.lead_id_) {
+        if (msg.type_ == BBMessageType::BB_PREPARE
+        && msg.data_hash_ == broadcast_msg.data_hash_
+        && msg.leader_id_ == broadcast_msg.leader_id_) {
 
           if (msg.BOT) {
             valid_prepare_msg_bot_count += 1;
             botmessage = msg;
           } else {
             valid_prepare_msg_non_bot_count += 1;
-            nonbotmessgae = msg;
+            nonbotmessage = msg;
           }
         }
     }
@@ -387,12 +384,12 @@ bool BBGoodNode::CommandValidationPhaseK_R1(std::vector<std::shared_ptr<BBNode>>
 
 
 bool BBGoodNode::CommandValidationPhaseK_R2(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command) {
-  BBMessage boardcast_msg = GeneratePrepareMsg(local_data_bot_);
+  BBMessage broadcast_msg = GeneratePrepareMsg(local_data_bot_);
 
   // send I * to everyone, broadcast
   for (uint64_t j = 0; j < nodes.size(); ++j) {
     if (!local_node_output_status_[j]) {
-      nodes[j]->SendMessage(boardcast_msg);
+      nodes[j]->SendMessage(broadcast_msg);
     }
   }
 
@@ -400,23 +397,23 @@ bool BBGoodNode::CommandValidationPhaseK_R2(std::vector<std::shared_ptr<BBNode>>
   uint64_t valid_prepare_msg_bot_count = 0;
   uint64_t valid_prepare_msg_non_bot_count = 0;
   BBMessage botmessage;
-  BBMessage nonbotmessgae;
+  BBMessage nonbotmessage;
 
   // TODO: distinct number needs to be checked here for preventing bad nodes send fake data multiple times
   for (const auto& msg : prepare_msgs) {
       // view number, sequence number, hash
       // checks signatures (hash, here), replica number = current view, 2f prepare
       // messages match w the pre-prepare message
-      if (msg.type_ == BBMessageType::PREPARE
-      && msg.data_hash_ == prepare_msg.data_hash_
-      && msg.lead_id_ == prepare_msg.lead_id_) {
+      if (msg.type_ == BBMessageType::BB_PREPARE
+      && msg.data_hash_ == broadcast_msg.data_hash_
+      && msg.leader_id_ == broadcast_msg.leader_id_) {
 
         if (msg.BOT) {
           valid_prepare_msg_bot_count += 1;
           botmessage = msg;
         } else {
           valid_prepare_msg_non_bot_count += 1;
-          nonbotmessgae = msg;
+          nonbotmessage = msg;
         }
       }
   }
@@ -453,12 +450,12 @@ bool BBGoodNode::CommandValidationPhaseK_R2(std::vector<std::shared_ptr<BBNode>>
 
 bool BBGoodNode::CommandValidationPhaseK_R3(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command) {
   // TODO: 
-  BBMessage boardcast_msg = GeneratePrepareMsg(local_data_bot_);
+  BBMessage broadcast_msg = GeneratePrepareMsg(local_data_bot_);
 
   // send I * to everyone, broadcast
   for (uint64_t j = 0; j < nodes.size(); ++j) {
     if (!local_node_output_status_[j]) {
-      nodes[j]->SendMessage(boardcast_msg);
+      nodes[j]->SendMessage(broadcast_msg);
     }
   }
 
@@ -466,26 +463,26 @@ bool BBGoodNode::CommandValidationPhaseK_R3(std::vector<std::shared_ptr<BBNode>>
   uint64_t valid_prepare_msg_bot_count = 0;
   uint64_t valid_prepare_msg_non_bot_count = 0;
   BBMessage botmessage;
-  BBMessage nonbotmessgae;
+  BBMessage nonbotmessage;
   uint64_t min_k = 999999999999999999;
 
   // TODO: distinct number needs to be checked here for preventing bad nodes send fake data multiple times
   for (const auto& msg : prepare_msgs) {
     
-    if (msg.type_ == BBMessageType::PREPARE
-      && msg.data_hash_ == prepare_msg.data_hash_
-      && msg.lead_id_ == prepare_msg.lead_id_) {
+    if (msg.type_ == BBMessageType::BB_PREPARE
+      && msg.data_hash_ == broadcast_msg.data_hash_
+      && msg.leader_id_ == broadcast_msg.leader_id_) {
         // get min k 
 
         if (msg.phase_k_ < min_k) {
-          min_k = msg.phase_k_
+          min_k = msg.phase_k_;
         }
         if (msg.BOT) {
           valid_prepare_msg_bot_count += 1;
           botmessage = msg;
         } else {
           valid_prepare_msg_non_bot_count += 1;
-          nonbotmessgae = msg;
+          nonbotmessage = msg;
         }
     }
     }
@@ -500,7 +497,7 @@ bool BBGoodNode::CommandValidationPhaseK_R3(std::vector<std::shared_ptr<BBNode>>
       
     } else {
       // b := lsb(minα H(⟨k⟩{α}))
-      b = sha256(std::to_string(min_k)) & 1;
+      uint8_t b = lsb_sha256(std::to_string(min_k));
       if (!b) {
         SetPrepareMsg(botmessage, true);
       } else {
@@ -523,8 +520,8 @@ void BBGoodNode::ReceiveRequestMsg(const std::string& command) {
  **************************/
 std::string BBGoodNode::ReplyRequest()  {
 
-  ClientReq req = process_client_req(local_message_);
-  if (req.type_ == ClientReqType::BB_GET) {
+  BBClientReq req = bb_process_client_req(local_message_);
+  if (req.type_ == BBClientReqType::BB_GET) {
     return std::to_string(val_);
   }
 

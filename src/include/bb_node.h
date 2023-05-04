@@ -11,6 +11,7 @@
 #include <future>
 #include <iostream>
 #include <list>
+#include <map>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -19,33 +20,33 @@
 #ifndef __BB_NODE_H__
 #define __BB_NODE_H__
 
-enum ClientReqType : char {
+enum BBClientReqType : char {
   BB_GET,
   BB_SET
 };
 
-struct ClientReq {
-  ClientReqType type_;
+struct BBClientReq {
+  BBClientReqType type_;
   int num_; // if set, then set this here.
 
-  ClientReq(ClientReqType type, int num) : type_(type), num_(num) {}
+  BBClientReq(BBClientReqType type, int num) : type_(type), num_(num) {}
 };
 
 
 enum BBMessageType : char {
   // TBD what types of BB message outthere,
   // there should be ⟨m⟩{ω,α} 
-  REQUEST,
-  PREPREPARE, // prepare
-  PREPARE, // prepare 
-  OUTPUT, // message type that suggest the sender had made up its mind
+  BB_REQUEST,
+  BB_PREPREPARE, // prepare
+  BB_PREPARE, // prepare 
+  BB_OUTPUT, // message type that suggest the sender had made up its mind
 };
 
 
 /** Helper functions */
 std::string BBMessageTypeToStr(BBMessageType type);
 BBMessageType StrToBBMessageType(const std::string& str);
-ClientReq process_client_req(const std::string& command);
+BBClientReq bb_process_client_req(const std::string& command);
 
 struct BBMessage {
   BBMessageType type_;
@@ -70,16 +71,16 @@ struct BBMessage {
   std::string ToStr() const {
     return "Type: " + BBMessageTypeToStr(type_) + ", Sender: "
     + std::to_string(sender_) + ", Leader Num: " + std::to_string(leader_id_)
-    + ", Data: " + data_ + ", BOT: " + BOT;
+    + ", Data: " + data_ + ", BOT: " + (BOT ? "true" : "false");
   }
 };
 
 BBMessage StrToBBMessage(std::string str);
 
 enum BBNodeType : char {
-  GOOD_NODE,
-  WRONG_NODE,
-  NON_RESPONSIVE_NODE
+  BB_GOOD_NODE,
+  BB_WRONG_NODE,
+  BB_NON_RESPONSIVE_NODE
 };
 
 // Virtual class

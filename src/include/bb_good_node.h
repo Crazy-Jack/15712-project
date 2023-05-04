@@ -13,7 +13,7 @@
 class BBGoodNode : public BBNode {
   public:
     BBGoodNode(bool faulty, uint64_t id, uint64_t num_nodes, uint64_t leader, uint64_t f) : BBNode(faulty, id, num_nodes, leader, f) {
-      type_ = BBNodeType::GOOD_NODE;
+      type_ = BBNodeType::BB_GOOD_NODE;
       if (leader == id) {
         leader_ = true;
       }
@@ -56,7 +56,7 @@ class BBGoodNode : public BBNode {
     BBMessage GenerateIstarMessage(bool BOT);
     BBMessage GeneratePrepareMsg(bool BOT);
 
-    void CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
+    bool CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
     void ReceiveStarMessages(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
     bool CommandValidationPhaseK_R1(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
     bool CommandValidationPhaseK_R2(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
