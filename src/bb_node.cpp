@@ -14,13 +14,13 @@ ClientReq process_client_req(const std::string& command) {
   ClientReqType type;
   int num = 0;
   if (command.compare("g") == 0) {
-    type = ClientReqType::PBFT_GET;
+    type = ClientReqType::BB_GET;
   } else {
     std::stringstream ss(command);  
     std::istream_iterator<std::string> begin(ss);
     std::istream_iterator<std::string> end;
     std::vector<std::string> commands(begin, end);
-    type = ClientReqType::PBFT_SET;
+    type = ClientReqType::BB_SET;
     num = std::stoi(commands[1]);
   }
   return ClientReq(type, num);
@@ -44,7 +44,7 @@ std::string BBMessageTypeToStr(BBMessageType type) {
   return "";
 }
 
-PBFTMessageType StrToBBMessageType(const std::string& str) {
+BBMessageType StrToBBMessageType(const std::string& str) {
   if (str == "REQUEST") {
     return BBMessageType::REQUEST;
   }
@@ -77,18 +77,18 @@ BBMessage StrToBBMessage(std::string str) {
     getline(input_stream, substring, ',');
     if (str_starts_with(substring, "Type: ")) {
       std::string type = substring.substr(6, substring.size() - 6);
-      pbft_message.type_ = StrToPBFTMessageType(type);
+      bb_message.type_ = StrToBBMessageType(type);
     } else if (str_starts_with(substring, " Sender: ")) {
       std::string sender_str = substring.substr(9, substring.size() - 9);
       uint64_t sender = static_cast<uint64_t>(std::stoi(sender_str));
-      pbft_message.sender_ = sender;
+      bb_message.sender_ = sender;
     } else if (str_starts_with(substring, " Data: ")) {
       std::string data = substring.substr(7, substring.size() - 7);
-      pbft_message.data_ = data;
-      pbft_message.data_hash_ = sha256(data);
+      bb_message.data_ = data;
+      bb_message.data_hash_ = sha256(data);
     }
   }
-  return pbft_message;
+  return bb_message;
 }
 
 
