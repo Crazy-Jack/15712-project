@@ -96,7 +96,6 @@ The Simple Optimistic State Machine Replication codebase is laid out in the foll
 │   ├── pbft_wrong_node.cpp
 │   ├── service.cpp
 │   └── simulator.cpp
-├── todo.txt
 └── traces
     ├── trace1.txt
     ├── trace100.txt
@@ -119,8 +118,12 @@ This directory contains the source code for the simulator. A few things to note 
 - The virtual classes for nodes and services are in `node.*` and `service.*` respectively.
 - `lib.cpp` contains a method for `sha256`, which is used in the PBFT service.
 - The implementation of the PBFT service is in the files `pbft_*.h` and `pbft_*.cpp`. The implementation of good (non-Byzantine) nodes is located in `pbft_good_node.*`, and the implementations of non-responsive and incorrect nodes are in `pbft_not_responsive_node.*` and `pbft_wrong_node.*` respectively. The PBFT service implementation is in `pbft_service.*`.
-- The implementation of the non-replicated service is in 
+- The implementation of the non-replicated service is in `non_replicated_service.hpp`.
 - The implementation of the BBAlgo service is in TODO: FILL IN
-- `basic_good_node.*` and `basic_good_service.*` are examples to the team (by Abi) to show how to use virtual classes to implement nodes/services. They are otherwise useless.
+- `basic_good_node.*` and `basic_good_service.*` are examples to the team to show how to use virtual classes to implement nodes/services. They are not used by the simulator codebase.
 
 ### traces
+This directory contains the trace files used by the simulator. It contains three tracefiles:
+- `trace1.txt`: The name for this is kind of deceptive. It contains two commands, a `s 2`, then a `g`. This is used for initial testing.
+- `trace100.txt`: This file contains 100 commands, and is randomly generated. It is used for stress testing.
+- `trace1000.txt`: This file contains 1000 commands, and is randomly generated. It is used mainly for benchmarking.

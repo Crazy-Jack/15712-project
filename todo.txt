@@ -1,6 +1,7 @@
 abi todo
-1. pbft service
-2. document code
+1. update readme
+2. handle tianqins pr
+3. write PBFT service section
 
 things to do left for report: 
 1. 
