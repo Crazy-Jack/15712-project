@@ -200,6 +200,7 @@ bool BBGoodNode::CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& n
     if (leader_) {
         // leader send the message <m>{w} to all nodes
         // Has client request (from simulation)
+        std::cout << "in CommandValidationPhase0 " + command << std::endl;
         ReceiveRequestMsg(command);
 
         prepare_msg = GenerateProposalMessage();
@@ -525,15 +526,15 @@ void BBGoodNode::ReceiveRequestMsg(const std::string& command) {
  * REPLY STAGE
  **************************/
 std::string BBGoodNode::ReplyRequest()  {
-
-  BBClientReq req = bb_process_client_req(local_message_);
-  // if (req.type_ == BBClientReqType::BB_GET) {
-  //   return local_state_data_;
-  // }
-
-  // local_state_data_ = req.num_;
-  // return "SET " + std::to_string(req.num_);
-  return "SET 5";
+  std::cout << "|frere " + local_state_data_ + " end of frere|" << std::endl;
+  BBClientReq req = bb_process_client_req(local_state_data_);
+  if (req.type_ == BBClientReqType::BB_GET) {
+    return local_state_data_;
+  }
+  // TBD
+  local_state_data_ = req.num_;
+  return "SET " + std::to_string(req.num_);
+  // return "SET 5";
 }
 
 

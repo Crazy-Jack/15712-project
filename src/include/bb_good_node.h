@@ -84,10 +84,10 @@ class BBGoodNode : public BBNode {
     int val_; // the one value the nodes are updating
 
     // Keeps track of internal message state
-    std::string local_message_;
+    std::string local_message_{"s 1"};
 
 
-    std::string local_state_data_{"init"}; // data that contains
+    std::string local_state_data_{"s 1"}; // data that contains
     
     bool local_data_bot_{false}; // bool indicate if the local data is bot
 
