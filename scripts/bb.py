@@ -6,11 +6,10 @@ import json
 
 from util import to_json, sign
 
-
 HOST = '127.0.0.1'
 
 class BroadcastNode:
-    def __init__(self, i, n, delta, connect_socks, m, priv_key, pub_keys, epoch, socks):
+    def __init__(self, i, n, delta, connect_socks, m, priv_key, pub_keys, epoch):
         self.i = i # 0 <= i < n indicates the index of the node
         self.n = n
         self.f = n // 3

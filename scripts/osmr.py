@@ -41,7 +41,6 @@ class OSMRNode:
         self.listen_threads = [None for _ in range(self.n)]
         self.listen_socks = [None for _ in range(self.n)]
         self.connect_socks = [None for _ in range(self.n)]
-        self.socks = [None for _ in range(self.n)]
         self.client_sock = None
         self.listen_sock = None
 
@@ -52,12 +51,11 @@ class OSMRNode:
     def schedule_advance(self):
         self.epoch += 1
         if self.pointer < len(self.queue):
-            print("-------------------\n HAHA\n ------------")
             m = self.queue[self.pointer]
             self.pointer += 1
         else:
             m = "bot"
-        self.bbs.append(BroadcastNode(self.i, self.n, self.delta, self.connect_socks, m, self.priv_key, self.pub_keys, self.epoch, self.socks))
+        self.bbs.append(BroadcastNode(self.i, self.n, self.delta, self.connect_socks, m, self.priv_key, self.pub_keys, self.epoch))
         self.bbs[self.epoch].start()
         self.log(f"Advanced to epoch {self.epoch}.")
         self.timer_thread = Timer(self.kappa, self.schedule_advance)
@@ -155,8 +153,6 @@ class OSMRNode:
         self.log("SHUTDOWN")
         if self.timer_thread is not None:
             self.timer_thread.cancel()
-        for j in range(self.n):
-            self.socks[j].close()
         for thread in self.threads:
             thread.join()
         self.log("DONE")
