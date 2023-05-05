@@ -58,49 +58,33 @@ In the simulator, the service updates one value via set and get commands. The co
 
 ## Proof-of-concept Implementation for Simple Optimistic SMR
 
-The simple optimistic SMR implementation is a Python script that can be ran by running `python3 main.py` from the `$PATH_TO_SOURCE_CODE/scripts` directory. One can toggle the arguments by modifying the 
+The simple optimistic SMR implementation is a Python script, located in `$PATH_TO_SOURCE_CODE/scripts/main.py`. This is the implementation of the BFT server using our protocol. It stores its agreed upon values in myfile.txt. We also provide a client implementation, located in `$PATH_TO_SOURCE_CODE/scripts/client.py`, that sends the initial command set to the server.
+
+### Usage
+To run the server, from the `$PATH_TO_SOURCE_CODE/scripts` directory, we open a terminal and run:
+```
+python3 main.py
+```
+We can edit the arguments of the server by modifying lines 12-16 (specifically, line 12, 14, 15) in `$PATH_TO_SOURCE_CODE/scripts/main.py`, which are:
+```python
+f = 1 # n = 3f + 1
+n = 3 * f + 1
+delta = 1 # in s
+kappa = 2 # in s
+mu = delta / kappa # delta = mu * kappa
+```
+`f` is the number of faulty nodes, where the total number of nodes (`n`) is then taken as `3f+1`. `delta` is the time of each round in seconds. `kappa` is the time of each epoch in seconds, and `mu` is a ratio that is `delta`/`kappa`.
+
+In a different terminal,  from the `$PATH_TO_SOURCE_CODE/scripts` directory, we then run the client:
+```
+python3 client.py
+```
 
 ## Codebase
 
 The Simple Optimistic State Machine Replication codebase is laid out in the following way:
 ```
-├── CMakeLists.txt
-├── README.md
-├── scripts
-│   ├── bb.py
-│   ├── client.py
-│   ├── generate_trace.py
-│   ├── main.py
-│   ├── osmr.py
-│   └── run_benchmark.py
-├── src
-│   ├── basic_good_node.cpp
-│   ├── basic_good_service.cpp
-│   ├── include
-│   │   ├── basic_good_node.h
-│   │   ├── basic_good_service.h
-│   │   ├── lib.h
-│   │   ├── node.h
-│   │   ├── non_replicated_service.hpp
-│   │   ├── pbft_good_node.h
-│   │   ├── pbft_node.h
-│   │   ├── pbft_not_responsive_node.h
-│   │   ├── pbft_service.h
-│   │   ├── pbft_wrong_node.h
-│   │   └── service.h
-│   ├── lib.cpp
-│   ├── node.cpp
-│   ├── pbft_good_node.cpp
-│   ├── pbft_node.cpp
-│   ├── pbft_not_responsive_node.cpp
-│   ├── pbft_service.cpp
-│   ├── pbft_wrong_node.cpp
-│   ├── service.cpp
-│   └── simulator.cpp
-└── traces
-    ├── trace1.txt
-    ├── trace100.txt
-    └── trace1000.txt
+TODO: update tree
 ```
 We organize our discussion of the codebase by file/directory.
 
@@ -111,7 +95,7 @@ This is the CMake configuration file for the Byzantine simulator.
 This is the README file (the one you're reading right now) for the codebase.
 
 ### scripts
-This directory contains two types of scripts. First, it contains the scripts used to implement the proof of concept implementation of our algorithm's state machine replication protocol. It also contains the scripts used for trace generation and benchmarking for the simulator.
+This directory contains two types of scripts. First, it contains the implementation of the proof of concept implementation of our algorithm's state machine replication protocol. These files are `bb.py`, `client.py`, `graph.py`, `main.py`, and `osmr.py`. It also contains the scripts used for trace generation and benchmarking for the simulator. These files are `generate_trace.py` and `run_benchmark.py`.
 
 ### src
 This directory contains the source code for the simulator. A few things to note are:
@@ -120,7 +104,7 @@ This directory contains the source code for the simulator. A few things to note 
 - `lib.cpp` contains a method for `sha256`, which is used in the PBFT service.
 - The implementation of the PBFT service is in the files `pbft_*.h` and `pbft_*.cpp`. The implementation of good (non-Byzantine) nodes is located in `pbft_good_node.*`, and the implementations of non-responsive and incorrect nodes are in `pbft_not_responsive_node.*` and `pbft_wrong_node.*` respectively. The PBFT service implementation is in `pbft_service.*`.
 - The implementation of the non-replicated service is in `non_replicated_service.hpp`.
-- The implementation of the BBAlgo service is in TODO: FILL IN
+- The implementation of the BBAlgo service is in the files `bb_*.h` and `bb_*.cpp`. The implementation of the good (non Byzantine) nodes is in `bb_good_node.*`, and the implementation of non-responsive nodes is in `bb_non_responsive_node.*`. The BBAlgo service implementation is in `bb_service.*`.
 - `basic_good_node.*` and `basic_good_service.*` are examples to the team to show how to use virtual classes to implement nodes/services. They are not used by the simulator codebase.
 
 ### traces
