@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
       } break;
       case 'd': {
         timeout = static_cast<uint64_t>(atoi(optarg));
-      }
+      } break;
       default: {
         std::cout << "Got unknown argument " << c << std::endl;
       }
