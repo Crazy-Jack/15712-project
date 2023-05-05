@@ -9,7 +9,7 @@ We will talk the usage and codebase of each of these projects below. The details
 ## Byzantine Protocol Simulator
 
 ### Usage
-The Byzantine Protocol simulator can either be ran by running `bft-sim`, the C++ executable that directly takes the simulator, or it can be ran by running the Python `./scripts/run_benchmark.py`, which runs `bft-sim` under the hood and measures the time that `bft-sim` takes to execute on different modes.
+The Byzantine Protocol simulator can either be ran by running `bft-sim`, the C++ executable that directly takes the simulator, or it can be ran by running the Python script `./scripts/run_benchmark.py`, which runs `bft-sim` under the hood and measures the time that `bft-sim` takes to execute on different modes.
 
 To build `bft-sim`, we run the following commands:
 ```bash
@@ -56,8 +56,9 @@ This command would generate a trace file called `trace25.txt` and place it in th
 
 In the simulator, the service updates one value via set and get commands. The commands in the trace files given to the service are either `g` (get and return the value) or `s 1` (set the value to 1, where any integer value can replace `1`). The return value from the service should be `SET VAL` for a set request to `VAL`, where `VAL` is an integer. For a get request, the return value should be just the value stored. The default value stored initially is 0.
 
-## Proof-of-concept implementation for Simple Optimistic SMR
-TODO: fill in
+## Proof-of-concept Implementation for Simple Optimistic SMR
+
+The simple optimistic SMR implementation is a Python script that can be ran by running `python3 main.py` from the `$PATH_TO_SOURCE_CODE/scripts` directory. One can toggle the arguments by modifying the 
 
 ## Codebase
 
