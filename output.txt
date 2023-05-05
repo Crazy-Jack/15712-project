@@ -1,0 +1,240 @@
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 20 
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '20'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0055 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 20
+BBAlgo service took 24.1102 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 30 
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '30'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0053 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 30
+BBAlgo service took 24.1228 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 40 
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '40'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0058 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 40
+BBAlgo service took 24.1057 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@abigales-mbp-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 50 
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '50'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0054 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 50
+BBAlgo service took 24.1142 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@abigales-mbp-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 100
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '100'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0054 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 100
+BBAlgo service took 26.1189 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@abigales-mbp-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 150
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '150'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0053 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 150
+BBAlgo service took 27.1126 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 200
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '200'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0054 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 200
+BBAlgo service took 26.1124 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 250
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '250'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0055 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 250
+BBAlgo service took 25.1059 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 300
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '300'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0056 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 300
+BBAlgo service took 23.1051 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@abigales-mbp-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 400
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '400'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.006 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 400
+BBAlgo service took 24.1067 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 450
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '450'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0054 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 450
+BBAlgo service took 26.1184 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 500
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '500'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0063 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 500
+BBAlgo service took 26.1145 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 550
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '550'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0054 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 550
+BBAlgo service took 24.1234 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@abigales-mbp-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 600
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '600'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0054 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 600
+BBAlgo service took 25.1158 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@abigales-mbp-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 650
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '650'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.005 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 650
+BBAlgo service took 24.1068 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@abigales-mbp-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 700
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '700'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0053 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 700
+BBAlgo service took 25.1189 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 750
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '750'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0061 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 750
+BBAlgo service took 24.1001 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 800
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '800'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0055 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 800
+BBAlgo service took 24.1062 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 850
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '850'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0053 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 850
+BBAlgo service took 24.1111 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 900
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '900'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0054 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 900
+BBAlgo service took 23.0868 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 950
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '950'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0053 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 950
+BBAlgo service took 24.1125 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 1000
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '1000'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0052 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 1000
+BBAlgo service took 27.1103 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 1100
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '1100'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0056 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 1100
+BBAlgo service took 36.1481 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
+abigale@Abigales-MBP-2 15712-project % python3 ./scripts/run_benchmark.py -t trace10.txt -c -f 1 -b 0 -m bbalgo -d 2000
+{'tracefile': 'trace10.txt', 'correctness': True, 'faulty_nodes': 1, 'byzantine_mode': 0, 'mode': 'bbalgo', 'delta': '2000'}
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 0 -d 0
+Non replicated service took 0.0052 seconds to run on tracefile trace10.txt
+/Users/abigale/code/cmu/15712-project/./scripts/../build/bft-sim
+./bft-sim -f 1 -t ../traces/trace10.txt -b 0 -r true -m 2 -d 2000
+BBAlgo service took 40.1642 seconds to run on tracefile trace10.txt
+Starting correctness check...
+Correctness check for non replicated service and bbalgo service succeeded.
