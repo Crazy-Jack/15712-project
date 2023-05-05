@@ -3,8 +3,8 @@ abi todo
 3. write PBFT service section
 
 things to do left for report: 
-1. albert: code rotating leaders, collect data for bbalgo
-2. abi: code unreplicated, collect data for 100
+1. albert: [CANNOT BE DONE; SOME WEIRD BUG] code rotating leaders, [JUST USE THE DISCUSSION FROM DISCORD] collect data for bbalgo
+2. abi: [DONE for python] code unreplicated, collect data for 100
 3. abi: create graph
 5. abi: pbft service, evaluation, conclusion
 
