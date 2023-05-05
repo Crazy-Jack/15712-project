@@ -135,21 +135,18 @@ std::vector<BBMessage> BBGoodNode::ReceiveIstarMsg()  {
 }
 
 void BBGoodNode::SetPrePrepareMsgState(const BBMessage& msg) {
-  local_state_data_ = msg.data_; // PrePrepare directly overwrite local_message_ from the leader 
+  local_message_ = msg.data_; // PrePrepare directly overwrite local_message_ from the leader 
   local_lead_id_ = msg.leader_id_;
 }
 
 
 void BBGoodNode::SetPrepareMsg(const BBMessage& msg, bool BOT) {
-  local_state_data_ = msg.data_;
   if (BOT) {
     local_data_bot_ = true;
   }
 }
 
 void BBGoodNode::SetStarMsg(const BBMessage& msg) {
-  local_state_data_ = msg.data_; // if it's a star message, should it modify the local message directly
-
   local_node_output_status_[msg.sender_] = true;
   local_node_output_data_[msg.sender_] = msg.data_;
 
@@ -168,7 +165,7 @@ BBMessage BBGoodNode::GenerateProposalMessage() {
     // type: BBMessage::PREPREPAPARE 
     //   local_view_number_ = GetId();
     //   return BBMessage(BBMessageType::PREPREPARE, GetId(), GetId(), local_sequence_num_, local_message_);
-  return BBMessage(BBMessageType::BB_PREPREPARE, GetId(), GetId(), local_state_data_, false, phase_k_);
+  return BBMessage(BBMessageType::BB_PREPREPARE, GetId(), GetId(), local_message_, false, phase_k_);
 
 }
 
@@ -176,13 +173,13 @@ BBMessage BBGoodNode::GenerateProposalMessage() {
 
 BBMessage BBGoodNode::GenerateIstarMessage(bool BOT) {
     // TODO: generate I* messages
-    return BBMessage(BBMessageType::BB_OUTPUT, GetId(), local_lead_id_, local_state_data_, BOT, phase_k_);
+    return BBMessage(BBMessageType::BB_OUTPUT, GetId(), local_lead_id_, local_message_, BOT, phase_k_);
 }
 
 
 
 BBMessage BBGoodNode::GeneratePrepareMsg(bool BOT) {
-    return BBMessage(BBMessageType::BB_PREPARE, GetId(), local_lead_id_, local_state_data_, BOT, phase_k_);
+    return BBMessage(BBMessageType::BB_PREPARE, GetId(), local_lead_id_, local_message_, BOT, phase_k_);
 }
 
 
@@ -200,7 +197,6 @@ bool BBGoodNode::CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& n
     if (leader_) {
         // leader send the message <m>{w} to all nodes
         // Has client request (from simulation)
-        std::cout << "in CommandValidationPhase0 " + command << std::endl;
         ReceiveRequestMsg(command);
 
         prepare_msg = GenerateProposalMessage();
@@ -298,8 +294,7 @@ void BBGoodNode::ReceiveStarMessages(std::vector<std::shared_ptr<BBNode>>& nodes
         // view number, sequence number, hash
         // checks signatures (hash, here), replica number = current view, 2f prepare
         // messages match w the pre-prepare message
-        if (msg.type_ == BBMessageType::BB_OUTPUT
-        ) {
+        if (msg.type_ == BBMessageType::BB_OUTPUT) {
             // store J to I
             SetStarMsg(msg);
         }
@@ -512,27 +507,18 @@ bool BBGoodNode::CommandValidationPhaseK_R3(std::vector<std::shared_ptr<BBNode>>
  **************************/
 void BBGoodNode::ReceiveRequestMsg(const std::string& command) {
   local_message_ = command;
-
-  BBClientReq req = bb_process_client_req(local_message_);
-  if (req.type_ == BBClientReqType::BB_SET) {
-    local_state_data_ = std::to_string(req.num_);
-  } else {
-    local_state_data_ = "init";
-  }
-
 }
 
 /** ***********************
  * REPLY STAGE
  **************************/
 std::string BBGoodNode::ReplyRequest()  {
-  std::cout << "|frere " + local_state_data_ + " end of frere|" << std::endl;
-  BBClientReq req = bb_process_client_req(local_state_data_);
+  BBClientReq req = bb_process_client_req(local_message_);
   if (req.type_ == BBClientReqType::BB_GET) {
-    return local_state_data_;
+    return std::to_string(val_);
   }
   // TBD
-  local_state_data_ = req.num_;
+  val_ = req.num_;
   return "SET " + std::to_string(req.num_);
   // return "SET 5";
 }
@@ -543,19 +529,19 @@ std::string BBGoodNode::ReplyRequest()  {
 void BBGoodNode::ExecuteCommand(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command, std::promise<std::string>&& val) {
 
   // phase 0
-  // bool outputted = false;
-  // outputted = CommandValidationPhase0(nodes, command);
-  // ReceiveStarMessages(nodes, command);
+  bool outputted = false;
+  outputted = CommandValidationPhase0(nodes, command);
+  ReceiveStarMessages(nodes, command);
 
   // // phase k
-  // while (!outputted) {
-  //   outputted = CommandValidationPhaseK_R1(nodes, command);
-  //   if (outputted) {break;}
-  //   outputted = CommandValidationPhaseK_R2(nodes, command);
-  //   if (outputted) {break;}
-  //   outputted = CommandValidationPhaseK_R3(nodes, command);
-  //   if (outputted) {break;}
-  // }
+  while (!outputted) {
+    outputted = CommandValidationPhaseK_R1(nodes, command);
+    if (outputted) {break;}
+    outputted = CommandValidationPhaseK_R2(nodes, command);
+    if (outputted) {break;}
+    outputted = CommandValidationPhaseK_R3(nodes, command);
+    if (outputted) {break;}
+  }
 
   // return value
   val.set_value(ReplyRequest());
