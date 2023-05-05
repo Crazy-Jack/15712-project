@@ -14,13 +14,14 @@ def to_json(dat):
     return json.dumps(dat).encode() + b'\n'
 
 class OSMRNode:
-    def __init__(self, i, n, delta, kappa, ports, priv_key, pub_keys):
+    def __init__(self, i, n, delta, kappa, listen_ports, connect_ports, priv_key, pub_keys):
         self.i = i # 0 <= i < n indicates the index of the node
         self.n = n
         self.f = n // 3
         self.delta = delta
         self.kappa = kappa
-        self.ports = ports
+        self.listen_ports = listen_ports
+        self.connect_ports = connect_ports
         self.is_leader = i == 0
         self.priv_key = priv_key
         self.pub_keys = pub_keys
@@ -37,6 +38,9 @@ class OSMRNode:
         # Networking, where
         # - ith socket is the None
         # - other sockets are sockets for other nodes
+        self.listen_threads = [None for _ in range(self.n)]
+        self.listen_socks = [None for _ in range(self.n)]
+        self.connect_socks = [None for _ in range(self.n)]
         self.socks = [None for _ in range(self.n)]
         self.client_sock = None
         self.listen_sock = None
@@ -53,37 +57,60 @@ class OSMRNode:
             self.pointer += 1
         else:
             m = "bot"
-        self.bbs.append(BroadcastNode(self.i, self.n, self.delta, self.ports, m, self.priv_key, self.pub_keys, self.epoch, self.socks))
+        self.bbs.append(BroadcastNode(self.i, self.n, self.delta, self.connect_socks, m, self.priv_key, self.pub_keys, self.epoch, self.socks))
         self.bbs[self.epoch].start()
         self.log(f"Advanced to epoch {self.epoch}.")
         self.timer_thread = Timer(self.kappa, self.schedule_advance)
         self.timer_thread.start()
 
     def start(self):
-        print('1')
         self.start_time = time.time()
         if self.i == 0:
             Thread(target=self.listen_client).start()
-        print('2')
-        Thread(target=self.listen).start()
-        print('3')
+        self.listen()
         self.connect()
-        print('4')
         self.schedule_advance()
 
-    def listen(self):
-        self.listen_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock = self.listen_sock
+    def listen1(self, j):
+        port = self.listen_ports[j]
+        self.listen_socks[j] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock = self.listen_socks[j]
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind((HOST, self.ports[self.i]))
+        sock.bind((HOST, port))
         sock.listen()
         while True:
             client, address = sock.accept()
             client.settimeout(90)
             self.log(f"Starting client {address}")
-            thread = Thread(target = self.react_to_messages, args = (client, address))
+            thread = Thread(target=self.react_to_messages, args=(client, j))
             self.threads.append(thread)
             thread.start()
+
+    def listen(self):
+        for j in range(self.n):
+            if j != self.i:
+                thread = Thread(target=self.listen1, args=(j,))
+                self.listen_threads[j] = thread
+                thread.start()
+
+    def react_to_messages(self, client, j):
+        # TODO: change this so we can get arbitrary size
+        size = 2048
+        queue = b''
+        while True:
+            messages = queue.split(b'\n')
+            queue = messages[-1]
+            for data in messages[:-1]:
+                data = json.loads(data)
+                epoch = data['epoch']
+                self.bbs[epoch].on_message(data, j)
+
+            try:
+                data = client.recv(size)
+                queue += data                
+            except:
+                client.close()
+                return False
 
     def listen_client(self):
         self.client_sock  = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -127,47 +154,15 @@ class OSMRNode:
     def connect(self):
         for j in range(self.n):
             if j != self.i:
-                port = self.ports[j]
+                port = self.connect_ports[j]
                 while True:
                     try:
-                        self.socks[j] = socket.socket()
-                        self.socks[j].connect((HOST, port))
-                        self.socks[j].sendall(to_json({'epoch': self.epoch, 'node': self.i, 'sigs': None}))
+                        self.connect_socks[j] = socket.socket()
+                        self.connect_socks[j].connect((HOST, port))
                         break
                     except Exception as e:
                         pass
     
-    def react_to_messages(self, client, address):
-        # TODO: change this so we can get arbitrary size
-        size = 2048
-        ind = -1
-        while True:
-            try:
-                data = client.recv(size)
-                data = json.loads(data)
-                # print(data)
-                if ind == -1:
-                    ind = data['node']
-                else:
-                    epoch = data['epoch']
-                    self.bbs[epoch].on_message(data, ind)
-                
-                '''
-                if data:
-                    res = carnival.interact(json.loads(data))
-                    if 'help' in res:
-                        client.send(res['help'].encode())
-                    else:
-                        client.send(to_json(res))
-                    if 'error' in res:
-                        raise Exception("There's an error")
-                else:
-                    raise Exception('Client disconnected')
-                '''
-            except:
-                client.close()
-                return False
-
         
     def shutdown(self):
         self.log("SHUTDOWN")

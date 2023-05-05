@@ -12,10 +12,15 @@ logging.basicConfig(level = logging.INFO)
 f = 1 # n = 3f + 1
 n = 3 * f + 1
 delta = 1 # in s
-kappa = 3 # in s
-mu = 1 # delta = mu * kappa
+kappa = 2 # in s
+mu = delta / kappa # delta = mu * kappa
 
-PORTS = range(15712, 15712 + n) 
+############################
+# PORTS matrix (n x n):
+# - Suppose position (i,j) contains port p [0-index].
+# - This means node i listens to port p and node j connects to port p.
+############################
+PORTS = [range(15712 + n * i, 15712 + n * (i + 1)) for i in range(n)]
 
 def to_json(dat):
     return json.dumps(dat).encode() + b'\n'
@@ -55,8 +60,10 @@ def start_node(i, priv_key, pub_keys):
     # b'ADB': the message to be agreed on
 
     #BroadcastNode(i, n, delta, PORTS, 'ADB' if i == 0 else None, priv_key, pub_keys).start()
-
-    OSMRNode(i, n, delta, kappa, PORTS, priv_key, pub_keys).start()
+    listen_ports = PORTS[i]
+    connect_ports = [PORTS[j][i] for j in range(n)]
+    
+    OSMRNode(i, n, delta, kappa, listen_ports, connect_ports, priv_key, pub_keys).start()
     
 if __name__ == '__main__':
     priv_keys = [ECC.generate(curve='P-256') for _ in range(n)]
