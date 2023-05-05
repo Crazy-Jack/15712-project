@@ -526,7 +526,7 @@ std::string BBGoodNode::ReplyRequest()  {
 
   BBClientReq req = bb_process_client_req(local_message_);
   if (req.type_ == BBClientReqType::BB_GET) {
-    return std::to_string(local_state_data_);
+    return local_state_data_;
   }
 
   local_state_data_ = req.num_;
@@ -554,10 +554,7 @@ void BBGoodNode::Initialize() {
 
 
 void BBGoodNode::ExecuteCommand(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command, std::promise<std::string>&& val) {
-  // initialize
-  for (uint64_t j = 0; j < nodes.size(); ++j) {
-       nodes[j]->Initialize();
-  }
+
   // phase 0
   bool outputted = false;
   outputted = CommandValidationPhase0(nodes, command);

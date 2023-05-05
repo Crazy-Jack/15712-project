@@ -106,21 +106,10 @@ class BBNode : public Node {
     uint64_t num_nodes; 
     
     // // init
-    // std::map<uint64_t, bool> local_node_output_status_; // bool for each node in the neighborhood, indicating whether it outputed or not
-    // for (uint64_t i = 0; i < num_nodes; ++i) {
-    //   local_node_output_status_.insert({i, false});
-    // }
+    std::map<uint64_t, bool> local_node_output_status_; // bool for each node in the neighborhood, indicating whether it outputed or not
+    std::map<uint64_t, std::string> local_node_output_data_; // outputted values of each node
+    std::map<uint64_t, bool> local_node_output_bot_; // bool for each node in the neighborhood, indicating whether it output bot or not
     
-    // std::map<uint64_t, std::string> local_node_output_data_; // outputted values of each node
-    // std::string new_init_message = "";
-    // for (uint64_t i = 0; i < num_nodes; ++i) {
-    //   local_node_output_data_.insert({i, new_init_message});
-    // }
-
-    // std::map<uint64_t, bool> local_node_output_bot_; // bool for each node in the neighborhood, indicating whether it output bot or not
-    // for (uint64_t i = 0; i < num_nodes; ++i) {
-    //   local_node_output_bot_.insert({i, false});
-    // }
 
 };
 
