@@ -4,7 +4,11 @@ abi todo
 3. write PBFT service section
 
 things to do left for report: 
-1. 
+1. albert: code rotating leaders, collect data for bbalgo
+2. abi: code unreplicated, collect data for 100
+3. abi: create graph
+4. abi: update readme with usage + file names
+5. abi: pbft service, evaluation, conclusion
 
 tianqin todo
 1. alberts algo
