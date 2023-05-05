@@ -81,11 +81,13 @@ void BBNode::SendMessage(BBMessage message) {
 }
 
 BBClientReq bb_process_client_req(const std::string& command) {
+  std::cout << command << std::endl;
   BBClientReqType type;
   int num = 0;
   if (command.compare("g") == 0) {
     type = BBClientReqType::BB_GET;
   } else {
+    std::cout << "s" << std::endl;
     std::stringstream ss(command);  
     std::istream_iterator<std::string> begin(ss);
     std::istream_iterator<std::string> end;

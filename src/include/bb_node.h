@@ -103,7 +103,7 @@ class BBNode : public Node {
     uint64_t f_; // number of faulty nodes
     uint64_t local_lead_id_; // store leader id locally
     BBNodeType type_; // Type of BB Node
-    uint64_t num_nodes; 
+    uint64_t num_nodes;
     
     // // init
     std::map<uint64_t, bool> local_node_output_status_; // bool for each node in the neighborhood, indicating whether it outputed or not

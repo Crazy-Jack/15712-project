@@ -17,7 +17,23 @@ class BBGoodNode : public BBNode {
       if (leader == id) {
         leader_ = true;
       }
-      local_lead_id_ = id;
+      // local_lead_id_ = id;
+
+      // std::map<uint64_t, bool> local_node_output_status_; // bool for each node in the neighborhood, indicating whether it outputed or not
+      for (uint64_t i = 0; i < num_nodes; ++i) {
+        local_node_output_status_.insert({i, false});
+      }
+      
+      // std::map<uint64_t, std::string> local_node_output_data_; // outputted values of each node
+      std::string new_init_message = "";
+      for (uint64_t i = 0; i < num_nodes; ++i) {
+        local_node_output_data_.insert({i, new_init_message});
+      }
+
+      // std::map<uint64_t, bool> local_node_output_bot_; // bool for each node in the neighborhood, indicating whether it output bot or not
+      for (uint64_t i = 0; i < num_nodes; ++i) {
+        local_node_output_bot_.insert({i, false});
+      }
     }
 
     void ExecuteCommand(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command, std::promise<std::string>&& val) override;
@@ -61,8 +77,7 @@ class BBGoodNode : public BBNode {
     bool CommandValidationPhaseK_R1(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
     bool CommandValidationPhaseK_R2(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
     bool CommandValidationPhaseK_R3(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
-    void Initialize();
-    
+
     std::string ReplyRequest();
    
     // Value the good nodes are keeping track of:
@@ -72,9 +87,9 @@ class BBGoodNode : public BBNode {
     std::string local_message_;
 
 
-    std::string local_state_data_{""}; // data that contains
+    std::string local_state_data_{"init"}; // data that contains
     
-    bool local_data_bot_{true}; // bool indicate if the local data is bot
+    bool local_data_bot_{false}; // bool indicate if the local data is bot
 
     // Whether the node is a leader or not
     bool leader_{false};
