@@ -12,5 +12,5 @@ with open('../traces/trace100.txt', 'r') as f:
     sock = socket.socket()
     sock.connect((HOST, PORT))
     for i in range(len(ls)):
-        sock.sendall(to_json({'m': ls[i]}))
+        sock.sendall(to_json({'m': ls[i].rstrip()}))
         time.sleep(0.1)

@@ -251,7 +251,6 @@ bool BBGoodNode::CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& n
     std::vector<BBMessage> prepare_msgs = ReceivePrepareMsg();
     uint64_t valid_prepare_msg_count = 0;
     // log the subset S node number
-    std::vector<uint64_t> SubsetSuccessNodesIDs;
 
     // TODO: distinct number needs to be checked here for preventing bad nodes send fake data multiple times
     for (const auto& msg : prepare_msgs) {
@@ -262,7 +261,6 @@ bool BBGoodNode::CommandValidationPhase0(std::vector<std::shared_ptr<BBNode>>& n
         && msg.data_hash_ == prepare_msg.data_hash_
         && msg.leader_id_ == prepare_msg.leader_id_) {
             valid_prepare_msg_count += 1;
-            SubsetSuccessNodesIDs.push_back(msg.sender_);
         }
     }
 
@@ -513,6 +511,12 @@ bool BBGoodNode::CommandValidationPhaseK_R3(std::vector<std::shared_ptr<BBNode>>
  **************************/
 void BBGoodNode::ReceiveRequestMsg(const std::string& command) {
   local_message_ = command;
+
+  BBClientReq req = bb_process_client_req(local_message_);
+  if (req.type_ == BBClientReqType::BB_SET) {
+    local_state_data_ = req.num_;
+  }
+
 }
 
 /** ***********************
@@ -522,14 +526,38 @@ std::string BBGoodNode::ReplyRequest()  {
 
   BBClientReq req = bb_process_client_req(local_message_);
   if (req.type_ == BBClientReqType::BB_GET) {
-    return std::to_string(val_);
+    return std::to_string(local_state_data_);
   }
 
-  val_ = req.num_;
+  local_state_data_ = req.num_;
   return "SET " + std::to_string(req.num_);
 }
 
+
+void BBGoodNode::Initialize() {
+  std::map<uint64_t, bool> local_node_output_status_; // bool for each node in the neighborhood, indicating whether it outputed or not
+  for (uint64_t i = 0; i < num_nodes; ++i) {
+    local_node_output_status_.insert({i, false});
+  }
+  
+  std::map<uint64_t, std::string> local_node_output_data_; // outputted values of each node
+  std::string new_init_message = "";
+  for (uint64_t i = 0; i < num_nodes; ++i) {
+    local_node_output_data_.insert({i, new_init_message});
+  }
+
+  std::map<uint64_t, bool> local_node_output_bot_; // bool for each node in the neighborhood, indicating whether it output bot or not
+  for (uint64_t i = 0; i < num_nodes; ++i) {
+    local_node_output_bot_.insert({i, false});
+  }
+}
+
+
 void BBGoodNode::ExecuteCommand(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command, std::promise<std::string>&& val) {
+  // initialize
+  for (uint64_t j = 0; j < nodes.size(); ++j) {
+       nodes[j]->Initialize();
+  }
   // phase 0
   bool outputted = false;
   outputted = CommandValidationPhase0(nodes, command);

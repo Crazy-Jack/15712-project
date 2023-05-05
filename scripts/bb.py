@@ -13,12 +13,11 @@ def to_json(dat):
     return json.dumps(dat).encode() + b'\n'
 
 class BroadcastNode:
-    def __init__(self, i, n, delta, ports, m, priv_key, pub_keys, epoch, socks):
+    def __init__(self, i, n, delta, connect_socks, m, priv_key, pub_keys, epoch, socks):
         self.i = i # 0 <= i < n indicates the index of the node
         self.n = n
         self.f = n // 3
         self.delta = delta
-        self.ports = ports
         self.is_leader = i == 0
         self.m = m
         self.priv_key = priv_key
@@ -30,15 +29,13 @@ class BroadcastNode:
         self.phase = 0
         self.round = 0
         self.start_time = 0 # Updated when start is called
+        self.terminated = False
         # Networking, where
         # - ith socket is the listening socket
         # - other sockets are the client sockets
-        self.socks = socks
+        self.connect_socks = connect_socks
         self.timer_thread = None
         self.listener_thread = None
-        self.threads = [] # Keep track of threads sequentially
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     def log(self, m):
         elapsed = time.time() - self.start_time
@@ -69,8 +66,6 @@ class BroadcastNode:
 
     def start(self):
         self.start_time = time.time()
-        #Thread(target = self.listen).start()
-        #self.connect()
         self.schedule_advance()
 
     def verify_message(self, v):
@@ -79,6 +74,8 @@ class BroadcastNode:
         return True
 
     def on_message(self, v, ind):
+        if self.terminated:
+            return
         if 'm' not in v or 'sigs' not in v:
             return
 
@@ -99,9 +96,8 @@ class BroadcastNode:
                             if s is not None:
                                 sending_sigs.append(s)
                         sending_sigs = sending_sigs[:2 * self.f + 1]
-                        self.socks[j].sendall(to_json({'epoch': self.epoch, 'm': m, 'sigs': sending_sigs}))
-                self.shutdown(m)
-
+                        self.connect_socks[j].sendall(to_json({'epoch': self.epoch, 'm': m, 'sigs': sending_sigs}))
+                self.terminate(m)
         elif len(sigs) == 1 and self.round == 1:
             self.log(f'Leader from {ind}')
             if self.gathered[0] is None and ind == 0:
@@ -110,7 +106,7 @@ class BroadcastNode:
                 self.gathered[self.i] = sig
                 for j in range(self.n):
                     if j != self.i:
-                        self.socks[j].sendall(to_json({'epoch': self.epoch, 'm': m, 'sigs': [sigs[0], sig]}))
+                        self.connect_socks[j].sendall(to_json({'epoch': self.epoch, 'm': m, 'sigs': [sigs[0], sig]}))
         else:
             self.log('KIND4')
             
@@ -136,6 +132,7 @@ class BroadcastNode:
                 return False
     '''
     
+
     # This is called at the start of each round
     def send_messages(self):
         if self.phase == 0 and self.round == 1:
@@ -144,21 +141,21 @@ class BroadcastNode:
                 self.gathered[0] = sig
                 for j in range(self.n):
                     if j != self.i:
-                        self.socks[j].sendall(to_json({'epoch': self.epoch, 'm': self.m, 'sigs': [sig]}))
-                    
-
+                        self.connect_socks[j].sendall(to_json({'epoch': self.epoch, 'm': self.m, 'sigs': [sig]}))
             
 
+    def terminate(self, m):
+        if self.terminated:
+            return
+        else:
+            self.terminated = True
 
-    def shutdown(self, m):
-        self.log("SHUTDOWN")
         if self.i == 1:
             with open("myfile.txt", "a") as f:
                 f.write(m + "\n")
         
         if self.timer_thread is not None:
             self.timer_thread.cancel()
-        for thread in self.threads:
-            thread.join()
-        self.log("DONE")
+        self.log(f"DONE {m}")
+
 
