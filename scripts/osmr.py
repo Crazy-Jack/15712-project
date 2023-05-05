@@ -6,12 +6,12 @@ import json
 from Crypto.Hash import SHA256
 from Crypto.Signature import DSS
 from binascii import hexlify
+
 from bb import BroadcastNode
+from util import to_json
 
 HOST = '127.0.0.1'
 
-def to_json(dat):
-    return json.dumps(dat).encode() + b'\n'
 
 class OSMRNode:
     def __init__(self, i, n, delta, kappa, listen_ports, connect_ports, priv_key, pub_keys):

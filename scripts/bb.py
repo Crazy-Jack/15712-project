@@ -3,14 +3,11 @@ import logging
 from threading import Timer, Thread
 import time
 import json
-from Crypto.Hash import SHA256
-from Crypto.Signature import DSS
-from binascii import hexlify
+
+from util import to_json, sign
+
 
 HOST = '127.0.0.1'
-
-def to_json(dat):
-    return json.dumps(dat).encode() + b'\n'
 
 class BroadcastNode:
     def __init__(self, i, n, delta, connect_socks, m, priv_key, pub_keys, epoch, socks):
@@ -40,11 +37,6 @@ class BroadcastNode:
     def log(self, m):
         elapsed = time.time() - self.start_time
         logging.info(f"[Node {self.i} at {elapsed:.5f}] {m}")
-
-    def sign(self, m):
-        h = SHA256.new(m.encode())
-        signer = DSS.new(self.priv_key, 'fips-186-3')
-        return hexlify(signer.sign(h)).decode()
     
     def count_non_none(self, a):
         res = 0
@@ -102,42 +94,20 @@ class BroadcastNode:
             self.log(f'Leader from {ind}')
             if self.gathered[0] is None and ind == 0:
                 self.gathered[0] = sigs[0]
-                sig = self.sign(m)
+                sig = sign(self.priv_key, m)
                 self.gathered[self.i] = sig
                 for j in range(self.n):
                     if j != self.i:
                         self.connect_socks[j].sendall(to_json({'epoch': self.epoch, 'm': m, 'sigs': [sigs[0], sig]}))
         else:
             self.log('KIND4')
-            
-
-        
-    '''
-    def react_to_messages(self, client, address):
-        # TODO: change this so we can get arbitrary size
-        size = 4096
-        ind = -1
-        while True:
-            try:
-                data = client.recv(size)
-                data = json.loads(data)
-                # print(data)
-                if ind == -1:
-                    ind = data['node']
-                else:
-                    self.react_phase0(data, ind)
-                
-            except:
-                client.close()
-                return False
-    '''
     
 
     # This is called at the start of each round
     def send_messages(self):
         if self.phase == 0 and self.round == 1:
             if self.is_leader:
-                sig = self.sign(self.m)
+                sig = sign(self.priv_key, self.m)
                 self.gathered[0] = sig
                 for j in range(self.n):
                     if j != self.i:
@@ -157,5 +127,4 @@ class BroadcastNode:
         if self.timer_thread is not None:
             self.timer_thread.cancel()
         self.log(f"DONE {m}")
-
 

@@ -6,6 +6,7 @@ from random import randbytes
 from Crypto.PublicKey import ECC
 
 from osmr import OSMRNode
+from util import to_json
 
 logging.basicConfig(level = logging.INFO)
 
@@ -21,35 +22,6 @@ mu = delta / kappa # delta = mu * kappa
 # - This means node i listens to port p and node j connects to port p.
 ############################
 PORTS = [range(15712 + n * i, 15712 + n * (i + 1)) for i in range(n)]
-
-def to_json(dat):
-    return json.dumps(dat).encode() + b'\n'
-
-class Server(object):
-
-    def listenToClient(self, client, address):
-        BroadcastNode(i, n, delta).start()
-        '''
-        size = 1024
-        carnival = Carnival(address)
-        client.send(carnival.menu())
-        while True:
-            try:
-                data = client.recv(size)
-                if data:
-                    res = carnival.interact(json.loads(data))
-                    if 'help' in res:
-                        client.send(res['help'].encode())
-                    else:
-                        client.send(to_json(res))
-                    if 'error' in res:
-                        raise Exception("There's an error")
-                else:
-                    raise Exception('Client disconnected')
-            except:
-                client.close()
-                return False
-        '''
 
 def start_node(i, priv_key, pub_keys):
     # i: id of node
