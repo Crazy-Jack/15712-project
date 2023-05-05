@@ -15,7 +15,7 @@ import subprocess
 import time
 
 # Run program, return string with results
-def run_prog(tracefile, f, byzantine_mode, mode):
+def run_prog(tracefile, f, byzantine_mode, mode, delta=0):
   if f <= 0:
     print("f is " + str(f) + ", which is not a valid value of f. f should be > 0.")
     exit()
@@ -48,7 +48,7 @@ def run_prog(tracefile, f, byzantine_mode, mode):
     # This assumes that ./build/bft-sim exists
     print(executable_path)
     tracefile_path = "../traces/" + tracefile
-    bft_sim_cmd = "./bft-sim -f " + str(f) + " -t " + tracefile_path + " -b " + str(byzantine_mode) + " -r true -m " + str(mode)
+    bft_sim_cmd = "./bft-sim -f " + str(f) + " -t " + tracefile_path + " -b " + str(byzantine_mode) + " -r true -m " + str(mode) + " -d " + str(delta)
     print(bft_sim_cmd)
     start_time = time.time()
     process1 = subprocess.run(bft_sim_cmd, shell=True, capture_output=True, text=True, cwd=executable_dir_path)
@@ -76,6 +76,7 @@ if __name__ == "__main__":
   parser.add_argument('-f', '--faulty-nodes', action='store', help='number of faulty nodes (total nodes = 3f + 1)', type=int) 
   parser.add_argument('-b', '--byzantine-mode', action='store', help='byzantine mode: for PBFT, -b 0 will run only good nodes, -b 1 will run non responsive nodes, -b 2 will run wrong but not non responsive nodes', type=int)
   parser.add_argument('-m', '--mode', action='store', help='-m pbft will run pbft, -m bbalgo will run our algorithm, -m nrep will run not-replicated service only')
+  parser.add_argument('-d', '--delta', action='store', help='delta, for BBAlgo')
   args = parser.parse_args()
   args_dict = vars(args)
   print(args_dict)
@@ -84,6 +85,7 @@ if __name__ == "__main__":
   f = args_dict['faulty_nodes']
   byzantine_mode = args_dict['byzantine_mode']
   prog_mode = args_dict['mode']
+  delta = args_dict['delta']
 
   non_replicated_results, nrep_time = run_prog(tracefile, f, byzantine_mode, 0)
   print("Non replicated service took " + str(round(nrep_time, 4)) + " seconds to run on tracefile " + tracefile)
@@ -94,7 +96,7 @@ if __name__ == "__main__":
     print("PBFT service took " + str(round(pbft_time, 4)) + " seconds to run on tracefile " + tracefile)
     additional_results = pbft_results
   elif prog_mode == "bbalgo":
-    bbalgo_results, bbalgo_time = run_prog(tracefile, f, byzantine_mode, 2)
+    bbalgo_results, bbalgo_time = run_prog(tracefile, f, byzantine_mode, 2, delta)
     print("BBAlgo service took " + str(round(bbalgo_time, 4)) + " seconds to run on tracefile " + tracefile)
     additional_results = bbalgo_results
 

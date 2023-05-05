@@ -1,0 +1,46 @@
+bot
+bot
+bot
+bot
+bot
+bot
+bot
+s 0
+g
+g
+s 7
+s 10
+g
+s 6
+g
+g
+s 2
+g
+s 9
+s 2
+s 5
+g
+g
+g
+bot
+bot
+s 0
+g
+g
+s 7
+s 10
+g
+s 6
+g
+g
+s 2
+g
+s 9
+s 2
+s 5
+g
+g
+g
+s 10
+g
+g

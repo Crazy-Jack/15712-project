@@ -29,8 +29,9 @@ int main(int argc, char** argv) {
   bool reliable = true;
   uint64_t mode = 0;
   std::shared_ptr<Service> service;
+  uint64_t timeout = 500;
 
-  while ((c = getopt(argc, argv, "f:t:b:r:m:")) != -1) {
+  while ((c = getopt(argc, argv, "f:t:b:r:m:d:")) != -1) {
     switch (c) {
       case 'f': {
         faulty_nodes = static_cast<uint64_t>(atoi(optarg));
@@ -49,6 +50,9 @@ int main(int argc, char** argv) {
       case 'm': {
         mode = static_cast<uint64_t>(atoi(optarg));
       } break;
+      case 'd': {
+        timeout = static_cast<uint64_t>(atoi(optarg));
+      }
       default: {
         std::cout << "Got unknown argument " << c << std::endl;
       }
@@ -60,7 +64,7 @@ int main(int argc, char** argv) {
   } else if (mode == 1) {
     service = std::make_shared<PBFTService>(faulty_nodes, byzantine_mode, true);
   } else if (mode == 2) {
-    service = std::make_shared<BBService>(faulty_nodes, byzantine_mode, true);
+    service = std::make_shared<BBService>(faulty_nodes, byzantine_mode, true, timeout);
   }
 
   // Parse the tracefile. 

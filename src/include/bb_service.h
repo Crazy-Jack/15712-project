@@ -19,7 +19,7 @@ class BBService : public Service {
    * @param byzantine_mode 0 (no Byzantine nodes), 1 (not responsive nodes), 2 (wrong nodes)
    * @param reliable whether the good nodes in the service can die (unused)
    */
-    BBService(uint64_t num_faulty_nodes, uint64_t byzantine_mode, bool reliable) : f_(num_faulty_nodes) {
+    BBService(uint64_t num_faulty_nodes, uint64_t byzantine_mode, bool reliable, uint64_t timeout) : f_(num_faulty_nodes) {
       uint64_t total_nodes = 3 * num_faulty_nodes + 1;
       // , primary_node_(primary_node_)
       uint64_t primary_node_ = 0;
@@ -27,7 +27,7 @@ class BBService : public Service {
       if (byzantine_mode == 0) {
         int timestamp = 0;
         for (uint64_t i = 0; i < total_nodes; ++i) {
-          nodes_.emplace_back(std::make_shared<BBGoodNode>(reliable, timestamp, total_nodes, primary_node_, num_faulty_nodes));
+          nodes_.emplace_back(std::make_shared<BBGoodNode>(reliable, timestamp, total_nodes, primary_node_, num_faulty_nodes, timeout));
           timestamp += 1;
         }
       } else if (byzantine_mode == 1) {
@@ -38,7 +38,7 @@ class BBService : public Service {
         }
 
         for (uint64_t i = num_faulty_nodes; i < total_nodes; ++i) {
-          nodes_.emplace_back(std::make_shared<BBGoodNode>(reliable, timestamp, total_nodes, primary_node_, num_faulty_nodes));
+          nodes_.emplace_back(std::make_shared<BBGoodNode>(reliable, timestamp, total_nodes, primary_node_, num_faulty_nodes, timeout));
           timestamp += 1;
         }
       }

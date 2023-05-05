@@ -30,7 +30,7 @@ bool BBGoodNode::AllPrePrepareMsgExist(std::chrono::time_point<std::chrono::stea
   }
   std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
   uint64_t milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-  return milliseconds > timeout;
+  return milliseconds > timeout_;
 }
 
 
@@ -44,7 +44,7 @@ bool BBGoodNode::AllPrepareMsgExist(std::chrono::time_point<std::chrono::steady_
   }
   std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
   uint64_t milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-  return count == f_ * 2 || milliseconds > timeout;
+  return count == f_ * 2 || milliseconds > timeout_;
 }
 
 
@@ -57,7 +57,7 @@ bool BBGoodNode::CheckIstarExist(std::chrono::time_point<std::chrono::steady_clo
   }
   std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
   uint64_t milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-  return milliseconds > timeout;
+  return milliseconds > timeout_;
 }
 
 
