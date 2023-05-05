@@ -61,7 +61,8 @@ class BBGoodNode : public BBNode {
     bool CommandValidationPhaseK_R1(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
     bool CommandValidationPhaseK_R2(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
     bool CommandValidationPhaseK_R3(std::vector<std::shared_ptr<BBNode>>& nodes, std::string command);
-
+    void Initialize();
+    
     std::string ReplyRequest();
    
     // Value the good nodes are keeping track of:
@@ -69,13 +70,11 @@ class BBGoodNode : public BBNode {
 
     // Keeps track of internal message state
     std::string local_message_;
-    if (leader == id) {
-      std::string local_state_data_{}; // data that contains
-    } else {
-      std::string local_state_data_{"null"}; // data that contains
-    }
+
+
+    std::string local_state_data_{""}; // data that contains
     
-    bool local_data_bot_; // bool indicate if the local data is bot
+    bool local_data_bot_{true}; // bool indicate if the local data is bot
 
     // Whether the node is a leader or not
     bool leader_{false};
