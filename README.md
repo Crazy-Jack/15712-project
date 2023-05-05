@@ -84,7 +84,57 @@ python3 client.py
 
 The Simple Optimistic State Machine Replication codebase is laid out in the following way:
 ```
-TODO: update tree
+├── CMakeLists.txt
+├── README.md
+├── scripts
+│   ├── bb.py
+│   ├── client.py
+│   ├── generate_trace.py
+│   ├── graph.py
+│   ├── main.py
+│   ├── myfile.txt
+│   ├── osmr.py
+│   ├── run_benchmark.py
+│   ├── unreplicated.py
+│   └── util.py
+├── src
+│   ├── basic_good_node.cpp
+│   ├── basic_good_service.cpp
+│   ├── bb_good_node.cpp
+│   ├── bb_node.cpp
+│   ├── bb_not_responsive_node.cpp
+│   ├── bb_service.cpp
+│   ├── include
+│   │   ├── basic_good_node.h
+│   │   ├── basic_good_service.h
+│   │   ├── bb_good_node.h
+│   │   ├── bb_node.h
+│   │   ├── bb_not_responsive_node.h
+│   │   ├── bb_service.h
+│   │   ├── lib.h
+│   │   ├── node.h
+│   │   ├── non_replicated_service.hpp
+│   │   ├── pbft_good_node.h
+│   │   ├── pbft_node.h
+│   │   ├── pbft_not_responsive_node.h
+│   │   ├── pbft_service.h
+│   │   ├── pbft_wrong_node.h
+│   │   └── service.h
+│   ├── lib.cpp
+│   ├── node.cpp
+│   ├── pbft_good_node.cpp
+│   ├── pbft_node.cpp
+│   ├── pbft_not_responsive_node.cpp
+│   ├── pbft_service.cpp
+│   ├── pbft_wrong_node.cpp
+│   ├── service.cpp
+│   └── simulator.cpp
+├── todo.txt
+└── traces
+    ├── trace1.txt
+    ├── trace10.txt
+    ├── trace100.txt
+    └── trace1000.txt
 ```
 We organize our discussion of the codebase by file/directory.
 
@@ -95,7 +145,7 @@ This is the CMake configuration file for the Byzantine simulator.
 This is the README file (the one you're reading right now) for the codebase.
 
 ### scripts
-This directory contains two types of scripts. First, it contains the implementation of the proof of concept implementation of our algorithm's state machine replication protocol. These files are `bb.py`, `client.py`, `graph.py`, `main.py`, and `osmr.py`. It also contains the scripts used for trace generation and benchmarking for the simulator. These files are `generate_trace.py` and `run_benchmark.py`.
+This directory contains two types of scripts. First, it contains the implementation of the proof of concept implementation of our algorithm's state machine replication protocol. These files are `bb.py`, `client.py`, `graph.py`, `main.py`, `osmr.py`, `unreplicated.py`, and `util.py`. It also contains the scripts used for trace generation and benchmarking for the simulator. These files are `generate_trace.py` and `run_benchmark.py`.
 
 ### src
 This directory contains the source code for the simulator. A few things to note are:
@@ -110,5 +160,6 @@ This directory contains the source code for the simulator. A few things to note 
 ### traces
 This directory contains the trace files used by the simulator. It contains three tracefiles:
 - `trace1.txt`: The name for this is kind of deceptive. It contains two commands, a `s 2`, then a `g`. This is used for initial testing.
-- `trace100.txt`: This file contains 100 commands, and is randomly generated. It is used for stress testing.
-- `trace1000.txt`: This file contains 1000 commands, and is randomly generated. It is used mainly for benchmarking.
+- `trace10.txt`: This file contains 10 commands.
+- `trace100.txt`: This file contains 100 commands.
+- `trace1000.txt`: This file contains 1000 commands.
