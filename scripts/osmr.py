@@ -133,19 +133,6 @@ class OSMRNode:
                 data = client.recv(size)
                 data = json.loads(data)
                 self.queue.append(data['m'])
-                
-                '''
-                if data:
-                    res = carnival.interact(json.loads(data))
-                    if 'help' in res:
-                        client.send(res['help'].encode())
-                    else:
-                        client.send(to_json(res))
-                    if 'error' in res:
-                        raise Exception("There's an error")
-                else:
-                    raise Exception('Client disconnected')
-                '''
             except:
                 client.close()
                 return False
