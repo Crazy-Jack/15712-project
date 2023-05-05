@@ -11,7 +11,7 @@
 #define __BB_GOOD_NODE_H__
 
 class BBGoodNode : public BBNode {
-  public:s
+  public:
     BBGoodNode(bool faulty, uint64_t id, uint64_t num_nodes, uint64_t leader, uint64_t f, uint64_t timeout) 
     : BBNode(faulty, id, num_nodes, leader, f)
     , timeout_(timeout)  {
@@ -95,7 +95,7 @@ class BBGoodNode : public BBNode {
     uint64_t phase_k_{0};
 
     // Static member to account for global timer (in milliseconds)
-    static const uint64_t timeout_{1000};
+    uint64_t timeout_{1000};
 };
 
 #endif // __BB_GOOD_NODE_H__
